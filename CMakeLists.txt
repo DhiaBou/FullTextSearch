@@ -17,6 +17,9 @@ add_executable(untitled
         src/algorithms/InvertedIndex/InvertedIndexEngine.hpp
         src/algorithms/TrigramIndex/TrigramIndexEngine.cpp
         src/algorithms/TrigramIndex/TrigramIndexEngine.hpp
+        src/algorithms/TrigramIndex/TrigramIndex.hpp
+        src/algorithms/TrigramIndex/TrigramIndex.cpp
+        src/algorithms/TrigramIndex/TrigramUtils.hpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.cpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp
         src/dataUtils/DocumentUtils.cpp
