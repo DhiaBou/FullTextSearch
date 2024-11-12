@@ -9,7 +9,7 @@
 
 class InvertedIndexEngine : public FullTextSearchEngine {
  public:
-  void indexDocuments(DocumentIterator it) override;
+  void indexDocuments(DocumentIterator doc_it) override;
 
   std::vector<DocumentID> search(const std::string &query,
                                  const scoring::ScoringFunction &score_func) override;
@@ -19,6 +19,7 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
+    std::unordered_map<std::string, std::unordered_map<size_t, size_t>> index;
 };
 
 #endif  // INVERTEDINDEXENGINE_HPP
