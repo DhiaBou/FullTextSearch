@@ -1,30 +1,31 @@
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #ifndef TRIGRAMUTILS_HPP
 #define TRIGRAMUTILS_HPP
 //---------------------------------------------------------------------------
-#include <cstdint>
-#include <functional>
+#include <array>
 //---------------------------------------------------------------------------
-struct Trigram {
-    public:
-    /// Constructor.
-    explicit Trigram(uint32_t raw_value): value(raw_value) {}
-    /// Constructor.
-    Trigram(uint32_t trigram, uint8_t wordOffset)
-        : value((trigram << 8) | (wordOffset & 0xFF)) {
+namespace utils {
+//---------------------------------------------------------------------------
+constexpr std::array<bool, 128> generateWhitelist() {
+    std::array<bool, 128> whitelist = {false};
+    for (char c = '0'; c <= '9'; ++c) {
+        whitelist[static_cast<unsigned char>(c)] = true;
     }
-
-    /// Get the trigram
-    [[nodiscard]] uint64_t get() const {  return (value >> 8); }
-    /// Get the position within the word where the trigram starts
-    [[nodiscard]] uint16_t getWordOffset() const { return value & 0xFF; }
-    /// Get the raw value
-    [[nodiscard]] uint32_t getValue() const { return value; }
-
-    private:
-    /// The raw value
-    uint32_t value;
-};
+    for (char c = 'A'; c <= 'Z'; ++c) {
+        whitelist[static_cast<unsigned char>(c)] = true;
+    }
+    for (char c = 'a'; c <= 'z'; ++c) {
+        whitelist[static_cast<unsigned char>(c)] = true;
+    }
+    whitelist[static_cast<unsigned char>('$')] = true;
+    whitelist[static_cast<unsigned char>('%')] = true;
+    whitelist[static_cast<unsigned char>('&')] = true;
+    whitelist[static_cast<unsigned char>('+')] = true;
+    whitelist[static_cast<unsigned char>('@')] = true;
+    return whitelist;
+}
+//---------------------------------------------------------------------------
+}
 //---------------------------------------------------------------------------
 #endif // TRIGRAMUTILS_HPP
 //---------------------------------------------------------------------------

@@ -20,6 +20,7 @@ add_executable(untitled
         src/algorithms/TrigramIndex/TrigramIndex.hpp
         src/algorithms/TrigramIndex/TrigramIndex.cpp
         src/algorithms/TrigramIndex/TrigramUtils.hpp
+        src/algorithms/TrigramIndex/Trigram.hpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.cpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp
         src/dataUtils/DocumentUtils.cpp
