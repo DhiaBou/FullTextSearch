@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
-#include "TrigramUtils.hpp"
+#include "Trigram.hpp"
 //---------------------------------------------------------------------------
 struct Appearance {
     /// The trigram this entry belongs to
     Trigram trigram;
     /// The ID of the document in which the trigram appears
-    uint32_t docId;
+    int docId;
 };
 //---------------------------------------------------------------------------
 class TrigramIndex {
@@ -24,7 +24,7 @@ public:
     void insert(Appearance app);
 private:
     /// A mapping of trigram to its appearances
-    std::unordered_map<u_int32_t, std::vector<Appearance>> index;
+    std::unordered_map<uint32_t, std::vector<Appearance>> index;
 };
 //---------------------------------------------------------------------------
 #endif  // TRIGRAMINDEX_HPP
