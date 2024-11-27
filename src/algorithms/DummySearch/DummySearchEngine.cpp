@@ -4,7 +4,10 @@
 #include <string>
 
 void DummySearchEngine::indexDocuments(DocumentIterator it) {
-    while (it.hasNext()) { documents.push_back(it.next()); }
+    do {
+        documents.push_back(*it);
+        ++it;
+    } while (it.hasNext());
 }
 
 std::vector<std::shared_ptr<Document> > DummySearchEngine::search(const std::string &query) {

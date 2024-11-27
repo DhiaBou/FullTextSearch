@@ -88,11 +88,7 @@ bool DocumentIterator::hasNext() {
         }
     }
 }
-
-std::shared_ptr<Document> DocumentIterator::next() {
-    if (!hasNext()) {
-        throw std::out_of_range("No more documents available");
-    }
+std::shared_ptr<Document> DocumentIterator::operator*() {
 
     int32_t length = 0;
     const uint8_t *value = dataArray->GetValue(currentRowIndex, &length);
@@ -103,12 +99,16 @@ std::shared_ptr<Document> DocumentIterator::next() {
 
     const char *dataPtr = reinterpret_cast<const char *>(value);
 
-    auto doc = std::make_shared<Document>(documentId, dataPtr, length, buffer);
-
-    currentRowIndex++;
-    documentId++;
-
-    return doc;
+    return std::make_shared<Document>(documentId, dataPtr, length, buffer);
 }
 
-
+void DocumentIterator::operator++() {
+    if (!hasNext()) {
+        throw std::out_of_range("No more documents available");
+    }
+    currentRowIndex++;
+    documentId++;
+}
+void DocumentIterator::operator++(int) {
+    ++(*this);
+}

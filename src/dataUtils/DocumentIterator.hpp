@@ -18,7 +18,10 @@ public:
 
     bool hasNext();
 
-    std::shared_ptr<Document> next();
+    std::shared_ptr<Document> operator*();
+
+    void operator++();
+    void operator++(int);
 
 private:
     void loadNextFile();

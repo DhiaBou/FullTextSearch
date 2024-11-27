@@ -21,11 +21,6 @@ int main() {
     std::cin >> directoryPath;
 
     DocumentIterator it(directoryPath);
-    while (it.hasNext()) {
-        auto doc = it.next();
-        std::cout << std::string_view(doc->getBegin(), doc->getSize()) << std::endl;
-    }
-
 
     do {
         std::cout << "Select search algorithm (vsm/inverted/trigram/dummy): ";
@@ -43,20 +38,20 @@ int main() {
         }
     } while (engine == nullptr);
 
-    // engine->indexDocuments(std::move(it));
-    //
-    // std::string query;
-    // while (true) {
-    //     std::cout << "Enter search query (or 'exit' to quit): ";
-    //     std::cin >> query;
-    //     if (query == "exit") break;
-    //
-    //     auto results = engine->search(query);
-    //
-    //     for (const auto &doc: results) {
-    //         std::cout << "Document ID: " << doc->getId() << std::endl;
-    //     }
-    // }
+     engine->indexDocuments(std::move(it));
+
+     std::string query;
+     while (true) {
+         std::cout << "Enter search query (or 'exit' to quit): ";
+         std::cin >> query;
+         if (query == "exit") break;
+
+         auto results = engine->search(query);
+
+         for (const auto &doc: results) {
+             std::cout << "Document ID: " << doc->getId() << std::endl;
+         }
+     }
 
     delete engine;
     return 0;
