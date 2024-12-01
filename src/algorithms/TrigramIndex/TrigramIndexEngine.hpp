@@ -4,7 +4,8 @@
 //---------------------------------------------------------------------------
 #include <unordered_set>
 #include "../../FullTextSearchEngine.hpp"
-#include "TrigramIndex.hpp"
+#include "index/HashIndex.hpp"
+#include "models/Trigram.hpp"
 #include "TrigramUtils.hpp"
 //---------------------------------------------------------------------------
 class TrigramIndexEngine : public FullTextSearchEngine {
@@ -16,10 +17,8 @@ public:
 private:
     /// A whitelist of ASCII characters allowed in the trigrams.
     static constexpr std::array<bool, 128> white_list = utils::generateWhitelist();
-    /// The underlying index structure.
-    TrigramIndex index;
-    /// The trigrams.
-    std::unordered_set<Trigram> trigrams;
+    /// The underlying index.
+    HashIndex<16> index;
 };
 //---------------------------------------------------------------------------
 #endif  // TRIGRAMINDEXENGINE_HPP

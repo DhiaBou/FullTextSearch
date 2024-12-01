@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include "TrigramIndexEngine.hpp"
-#include "Trigram.hpp"
+#include "models/Trigram.hpp"
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
     uint32_t doc_count = 0;
@@ -14,6 +14,8 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
     while(doc_it.hasNext()) {
         auto doc = *doc_it;
         uint32_t doc_length = 0;
+        std::unordered_map<Trigram, uint32_t> appearances;
+
         ++doc_count;
 
         auto trigram_begin = doc->getBegin();
@@ -30,8 +32,8 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
                     assert(it - trigram_begin == 2);
                     assert(trigram_begin >= word_begin);
 
-                    auto offset = static_cast<uint8_t>(trigram_begin - word_begin);
-                    trigrams.insert({trigram_begin, offset});
+                    auto offset = trigram_begin - word_begin;
+                    ++appearances[{trigram_begin, static_cast<uint8_t>(offset)}];
                     ++doc_length;
                     
                     ++trigram_begin;
@@ -40,7 +42,7 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
                 if (it - word_begin == 2) {
                     // stand-alone two-character "trigram"
                     char trigram[3] = {*word_begin, *(word_begin+1), '\0'};
-                    trigrams.emplace(trigram, 0);
+                    ++appearances[{trigram, 0}];
                     ++doc_length;
                 }
 
@@ -53,6 +55,10 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
         total_trigram_count += doc_length;
         doc_to_length[doc->getId()] = doc_length;
         
+        for(const auto& pair : appearances) {
+            index.insert(pair.first, {doc->getId(), pair.second});
+        }
+        
         ++doc_it;
     }
 
@@ -60,7 +66,15 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
 }
 //---------------------------------------------------------------------------
 std::vector<std::shared_ptr<Document>> TrigramIndexEngine::search(const std::string &query) {
-    std::cout << trigrams.size() << std::endl;
-    throw std::runtime_error("search method is not yet implemented.");
+    try {
+        auto matches = index.lookup({query.c_str(), 0});
+        for(const auto& match : *matches) {
+            std::cout << "Document: " << match.doc_id << ", Freq: " << match.freq << std::endl;
+        }
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Lookup error: " << e.what() << std::endl;
+    }
+
+    return std::vector<std::shared_ptr<Document>>();
 }
 //---------------------------------------------------------------------------

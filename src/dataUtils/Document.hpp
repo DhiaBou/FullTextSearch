@@ -9,14 +9,14 @@ class Document {
 public:
     Document(int id, const char *data, size_t size, const std::shared_ptr<arrow::Buffer> &arrowBuf);
 
-    [[nodiscard]] int getId() const { return id; }
+    [[nodiscard]] uint32_t getId() const { return id; }
 
     [[nodiscard]] const char *getBegin() const { return beginPointer; }
 
     [[nodiscard]] size_t getSize() const { return size; }
 
 private:
-    int id;
+    uint32_t id;
     const char *beginPointer;
     const size_t size;
     const std::shared_ptr<arrow::Buffer> &arrowBuf;

@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
 
+include_directories(${CMAKE_SOURCE_DIR}/src/algorithms/TrigramIndex)
+
 # Add your executable target and include the header files
 add_executable(untitled
         src/main.cpp
@@ -17,10 +19,11 @@ add_executable(untitled
         src/algorithms/InvertedIndex/InvertedIndexEngine.hpp
         src/algorithms/TrigramIndex/TrigramIndexEngine.cpp
         src/algorithms/TrigramIndex/TrigramIndexEngine.hpp
-        src/algorithms/TrigramIndex/TrigramIndex.hpp
-        src/algorithms/TrigramIndex/TrigramIndex.cpp
+        src/algorithms/TrigramIndex/index/Index.hpp
+        src/algorithms/TrigramIndex/index/HashIndex.hpp
         src/algorithms/TrigramIndex/TrigramUtils.hpp
-        src/algorithms/TrigramIndex/Trigram.hpp
+        src/algorithms/TrigramIndex/models/Trigram.hpp
+        src/algorithms/TrigramIndex/models/DocFreq.hpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.cpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp
         src/dataUtils/DocumentUtils.cpp
