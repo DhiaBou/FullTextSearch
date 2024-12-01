@@ -1,4 +1,4 @@
-// ---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 #ifndef TRIGRAM_HPP
 #define TRIGRAM_HPP
 //---------------------------------------------------------------------------
@@ -20,6 +20,13 @@ struct Trigram {
 
     /// Equality operator.
     bool operator==(const Trigram& other) const = default;
+    /// Stream insertion operator.
+    friend std::ostream& operator<<(std::ostream& os, const Trigram& trigram) {
+        os << static_cast<char>((trigram.getRawValue() >> 24) & 0xFF)
+            << static_cast<char>((trigram.getRawValue() >> 16) & 0xFF)
+            << static_cast<char>((trigram.getRawValue() >> 8) & 0xFF);
+        return os;
+    }
     /// Get the trigram.
     [[nodiscard]] uint32_t get() const {  return (value >> 8); }
     /// Get the position within the word where the trigram starts.
