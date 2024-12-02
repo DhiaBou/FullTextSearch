@@ -42,13 +42,36 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
 }
 //---------------------------------------------------------------------------
 std::vector<std::shared_ptr<Document>> TrigramIndexEngine::search(const std::string &query) {
-    try {
-        auto matches = index.lookup({query.c_str(), 0});
-        for(const auto& match : *matches) {
-            std::cout << "Document: " << match.doc_id << ", Freq: " << match.freq << std::endl;
+    std::vector<Trigram> trigrams;
+
+    auto parser = TrigramParser(query.c_str(), query.c_str() + query.size());
+    while(parser.hasNext()) {
+        trigrams.push_back(parser.next());
+    }
+
+    std::unordered_map<uint32_t, uint32_t> result;
+
+    for(const auto& trigram : trigrams) {
+        try {
+            auto matches = index.lookup(trigram);
+            for(const auto& match : *matches) {
+                ++result[match.doc_id];
+            }
+        } catch (const std::out_of_range& e) {
+            std::cerr << "Could not find Trigram: " << trigram << std::endl;
         }
-    } catch (const std::out_of_range& e) {
-        std::cerr << "Lookup error: " << e.what() << std::endl;
+    }
+
+    std::vector<std::pair<uint32_t, uint32_t>> sorted_result(result.begin(), result.end());
+    std::sort(sorted_result.begin(), sorted_result.end(), [](const auto& a, const auto& b) {
+        return a.second > b.second;
+    });
+
+    uint32_t count = 1;
+    for(const auto& [doc, freq] : sorted_result) {
+        std::cout << "Rank: " << count << std::endl;
+        std::cout << "Document: " << doc << ", Freq: " << freq << std::endl;
+        if(count++ == 10) break;
     }
 
     return std::vector<std::shared_ptr<Document>>();
