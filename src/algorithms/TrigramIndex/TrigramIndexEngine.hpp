@@ -6,7 +6,6 @@
 #include "../../FullTextSearchEngine.hpp"
 #include "index/HashIndex.hpp"
 #include "models/Trigram.hpp"
-#include "TrigramUtils.hpp"
 //---------------------------------------------------------------------------
 class TrigramIndexEngine : public FullTextSearchEngine {
 public:
@@ -15,8 +14,6 @@ public:
     /// Search for string.
     std::vector<std::shared_ptr<Document>> search(const std::string &query) override;
 private:
-    /// A whitelist of ASCII characters allowed in the trigrams.
-    static constexpr std::array<bool, 128> white_list = utils::generateWhitelist();
     /// The underlying index.
     HashIndex<16> index;
 };
