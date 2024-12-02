@@ -1,10 +1,11 @@
 //---------------------------------------------------------------------------
-#ifndef TRIGRAMUTILS_HPP
-#define TRIGRAMUTILS_HPP
+#ifndef TRIGRAM_PARSER_H
+#define TRIGRAM_PARSER_H
 //---------------------------------------------------------------------------
-#include <array>
-//---------------------------------------------------------------------------
-namespace utils {
+#include <cstdint>
+#include <cstring>
+#include <vector>
+#include "models/Trigram.hpp"
 //---------------------------------------------------------------------------
 constexpr std::array<bool, 128> generateWhitelist() {
     std::array<bool, 128> whitelist = {false};
@@ -23,9 +24,31 @@ constexpr std::array<bool, 128> generateWhitelist() {
     whitelist[static_cast<unsigned char>('+')] = true;
     whitelist[static_cast<unsigned char>('@')] = true;
     return whitelist;
-}
+};
 //---------------------------------------------------------------------------
-}
+class TrigramParser {
+    public:
+    /// Constructor
+    TrigramParser(const char* begin, const char* end);
+    /// Whether there is another Trigram.
+    bool hasNext();
+    /// Get the next trigram.
+    Trigram next() const; 
+
+    private:
+    /// A whitelist of ASCII characters allowed in the trigrams.
+    static constexpr std::array<bool, 128> white_list = generateWhitelist();
+
+    /// The end of the text to parse.
+    const char* end;
+    /// The text iterator.
+    const char* it;
+    /// The begin of the word the iterator is pointing to.
+    const char* word_begin;
+    /// The begin of the trigram the iterator is pointing to.
+    const char* trigram_begin;
+    /// The trigram produced by the hasNext call.
+    Trigram trigram;
+};
 //---------------------------------------------------------------------------
-#endif // TRIGRAMUTILS_HPP
-//---------------------------------------------------------------------------
+#endif // TRIGRAM_PARSER_H
