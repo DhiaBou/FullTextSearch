@@ -6,8 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
 
-# Add your executable target and include the header files
-add_executable(untitled
+add_executable(fts
         src/main.cpp
         src/fts_engine.hpp
         src/documents/document.hpp
@@ -21,5 +20,5 @@ add_executable(untitled
         src/algorithms/vsm/vector_space_model_engine.hpp
 )
 
-target_link_libraries(untitled PRIVATE arrow_shared parquet_shared)
+target_link_libraries(fts PRIVATE arrow_shared parquet_shared)
 
