@@ -97,9 +97,9 @@ std::shared_ptr<Document> DocumentIterator::operator*() {
     std::shared_ptr<arrow::Buffer> buffer = data_array->value_data();
 
 
-    const char *dataPtr = reinterpret_cast<const char *>(value);
+    auto *data_ptr = reinterpret_cast<const char *>(value);
 
-    return std::make_shared<Document>(doc_id, dataPtr, length, buffer);
+    return std::make_shared<Document>(doc_id, data_ptr, length, buffer);
 }
 
 void DocumentIterator::operator++() {
