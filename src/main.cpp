@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <string>
 #include "FullTextSearchEngine.hpp"
 #include "algorithms/DummySearch/DummySearchEngine.hpp"
 #include "algorithms/InvertedIndex/InvertedIndexEngine.hpp"
@@ -8,51 +8,47 @@
 #include "dataUtils/Document.hpp"
 #include "dataUtils/DocumentIterator.hpp"
 #include "dataUtils/DocumentUtils.hpp"
-#include <string>
 
 int main() {
-    // Choose search engine algorithm
-    FullTextSearchEngine *engine = nullptr;
-    std::string algorithmChoice;
+    std::unique_ptr<FullTextSearchEngine> engine;
 
-
+    // Specify path to the data 
     std::string directoryPath;
-    std::cout << "Enter search directory absolute path: ";
-    std::cin >> directoryPath;
-
+    std::cout << "Enter the absolute path to the data: ";
+    std::getline(std::cin, directoryPath);
     DocumentIterator it(directoryPath);
 
+    // Choose the algorithm
+    std::string algorithmChoice;
     do {
         std::cout << "Select search algorithm (vsm/inverted/trigram/dummy): ";
-        std::cin >> algorithmChoice;
+        std::getline(std::cin, algorithmChoice);
         if (algorithmChoice == "vsm") {
-            engine = new VectorSpaceModelEngine();
+            engine = std::make_unique<VectorSpaceModelEngine>();
         } else if (algorithmChoice == "inverted") {
-            engine = new InvertedIndexEngine();
+            engine = std::make_unique<InvertedIndexEngine>();
         } else if (algorithmChoice == "trigram") {
-            engine = new TrigramIndexEngine();
+            engine = std::make_unique<TrigramIndexEngine>();
         } else if (algorithmChoice == "dummy") {
-            engine = new DummySearchEngine();
+            engine = std::make_unique<DummySearchEngine>();
         } else {
             std::cout << "Invalid choice!" << std::endl;
         }
     } while (engine == nullptr);
 
-     engine->indexDocuments(std::move(it));
+    // Build the index
+    engine->indexDocuments(std::move(it));
 
-     std::string query;
-     while (true) {
-         std::cout << "Enter search query (or 'exit' to quit): ";
-         std::cin >> query;
-         if (query == "exit") break;
+    // Search
+    std::string query;
+    while (true) {
+        std::cout << "Enter search query: ";
+        std::getline(std::cin, query);
+    
+        auto results = engine->search(query);
 
-         auto results = engine->search(query);
-
-         for (const auto &doc: results) {
-             std::cout << "Document ID: " << doc->getId() << std::endl;
-         }
-     }
-
-    delete engine;
-    return 0;
+        for (const auto &doc: results) {
+            std::cout << "Document ID: " << doc->getId() << std::endl;
+        }
+    }
 }
