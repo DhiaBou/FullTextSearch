@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include "FullTextSearchEngine.hpp"
-#include "algorithms/DummySearch/DummySearchEngine.hpp"
 #include "algorithms/InvertedIndex/InvertedIndexEngine.hpp"
 #include "algorithms/TrigramIndex/TrigramIndexEngine.hpp"
 #include "algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp"
@@ -21,7 +20,7 @@ int main() {
     // Choose the algorithm
     std::string algorithmChoice;
     do {
-        std::cout << "Select search algorithm (vsm/inverted/trigram/dummy): ";
+        std::cout << "Select search algorithm (vsm/inverted/trigram): ";
         std::getline(std::cin, algorithmChoice);
         if (algorithmChoice == "vsm") {
             engine = std::make_unique<VectorSpaceModelEngine>();
@@ -29,8 +28,6 @@ int main() {
             engine = std::make_unique<InvertedIndexEngine>();
         } else if (algorithmChoice == "trigram") {
             engine = std::make_unique<TrigramIndexEngine>();
-        } else if (algorithmChoice == "dummy") {
-            engine = std::make_unique<DummySearchEngine>();
         } else {
             std::cout << "Invalid choice!" << std::endl;
         }

@@ -11,8 +11,6 @@ add_executable(untitled
         src/main.cpp
         src/dataUtils/Document.cpp
         src/dataUtils/Document.hpp
-        src/algorithms/DummySearch/DummySearchEngine.cpp
-        src/algorithms/DummySearch/DummySearchEngine.hpp
         src/algorithms/InvertedIndex/InvertedIndexEngine.cpp
         src/algorithms/InvertedIndex/InvertedIndexEngine.hpp
         src/algorithms/TrigramIndex/TrigramIndexEngine.cpp
