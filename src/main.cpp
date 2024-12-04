@@ -44,7 +44,7 @@ int main() {
         auto results = engine->search(query);
 
         for (const auto &doc: results) {
-            std::cout << "Document ID: " << doc->getId() << std::endl;
+            std::cout << "Document ID: " << doc << std::endl;
         }
     }
 }

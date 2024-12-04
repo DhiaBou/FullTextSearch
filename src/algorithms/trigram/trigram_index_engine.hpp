@@ -11,7 +11,7 @@ class TrigramIndexEngine : public FullTextSearchEngine {
 public:
     void indexDocuments(DocumentIterator it) override;
 
-    std::vector<std::shared_ptr<Document> > search(const std::string &query) override;
+    std::vector<uint32_t> search(const std::string &query) override;
 
 private:
 };
