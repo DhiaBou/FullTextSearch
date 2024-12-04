@@ -17,8 +17,6 @@ add_executable(untitled
         src/algorithms/TrigramIndex/TrigramIndexEngine.hpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.cpp
         src/algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp
-        src/dataUtils/DocumentUtils.cpp
-        src/dataUtils/DocumentUtils.hpp
         src/dataUtils/DocumentIterator.cpp
         src/dataUtils/DocumentIterator.hpp
 )
