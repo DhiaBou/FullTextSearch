@@ -1,6 +1,6 @@
 // Created by fts on 10/31/24.
 
-#include "VectorSpaceModelEngine.hpp"
+#include "vector_space_model_engine.hpp"
 
 #include <stdexcept>
 #include <string>

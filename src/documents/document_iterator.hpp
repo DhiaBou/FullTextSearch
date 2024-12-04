@@ -1,6 +1,5 @@
 #ifndef DOCUMENT_ITERATOR_HPP
 #define DOCUMENT_ITERATOR_HPP
-#include "Document.hpp"
 
 #include <parquet/arrow/reader.h>
 #include <arrow/io/file.h>
@@ -8,13 +7,13 @@
 #include <queue>
 #include <string>
 #include <memory>
-
+#include "document.hpp"
 
 namespace fs = std::filesystem;
 
 class DocumentIterator {
 public:
-    explicit DocumentIterator(const std::string &folderPath);
+    explicit DocumentIterator(const std::string &folder_path);
 
     bool hasNext();
 
@@ -28,15 +27,15 @@ private:
 
     bool loadNextBatch();
 
-    std::queue<std::string> fileQueue;
-    std::unique_ptr<parquet::arrow::FileReader> arrowReader;
-    std::shared_ptr<arrow::RecordBatchReader> batchReader;
-    std::shared_ptr<arrow::RecordBatch> currentBatch;
-    int64_t currentRowIndex = 0;
-    int64_t totalRowsInBatch = 0;
-    int documentId = 0;
+    std::queue<std::string> file_queue;
+    std::unique_ptr<parquet::arrow::FileReader> arrow_reader;
+    std::shared_ptr<arrow::RecordBatchReader> batch_reader;
+    std::shared_ptr<arrow::RecordBatch> current_batch;
+    int64_t current_row_index = 0;
+    int64_t total_rows_in_batch = 0;
+    int doc_id = 0;
 
-    std::shared_ptr<arrow::BinaryArray> dataArray;
+    std::shared_ptr<arrow::BinaryArray> data_array;
 };
 
 #endif  // DOCUMENT_ITERATOR_HPP

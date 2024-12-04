@@ -1,32 +1,31 @@
 #include <iostream>
 #include <string>
-#include "FullTextSearchEngine.hpp"
-#include "algorithms/InvertedIndex/InvertedIndexEngine.hpp"
-#include "algorithms/TrigramIndex/TrigramIndexEngine.hpp"
-#include "algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp"
-#include "dataUtils/Document.hpp"
-#include "dataUtils/DocumentIterator.hpp"
-#include "dataUtils/DocumentUtils.hpp"
+#include "fts_engine.hpp"
+#include "algorithms/inverted/inverted_index_engine.hpp"
+#include "algorithms/trigram/trigram_index_engine.hpp"
+#include "algorithms/vsm/vector_space_model_engine.hpp"
+#include "documents/document.hpp"
+#include "documents/document_iterator.hpp"
 
 int main() {
     std::unique_ptr<FullTextSearchEngine> engine;
 
     // Specify path to the data 
-    std::string directoryPath;
+    std::string directory_path;
     std::cout << "Enter the absolute path to the data: ";
-    std::getline(std::cin, directoryPath);
-    DocumentIterator it(directoryPath);
+    std::getline(std::cin, directory_path);
+    DocumentIterator it(directory_path);
 
     // Choose the algorithm
-    std::string algorithmChoice;
+    std::string algorithm_choice;
     do {
         std::cout << "Select search algorithm (vsm/inverted/trigram): ";
-        std::getline(std::cin, algorithmChoice);
-        if (algorithmChoice == "vsm") {
+        std::getline(std::cin, algorithm_choice);
+        if (algorithm_choice == "vsm") {
             engine = std::make_unique<VectorSpaceModelEngine>();
-        } else if (algorithmChoice == "inverted") {
+        } else if (algorithm_choice == "inverted") {
             engine = std::make_unique<InvertedIndexEngine>();
-        } else if (algorithmChoice == "trigram") {
+        } else if (algorithm_choice == "trigram") {
             engine = std::make_unique<TrigramIndexEngine>();
         } else {
             std::cout << "Invalid choice!" << std::endl;

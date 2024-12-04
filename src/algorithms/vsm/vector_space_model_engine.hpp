@@ -2,12 +2,12 @@
 // Created by fts on 10/31/24.
 //
 
-#ifndef TRIGRAMINDEXENGINE_HPP
-#define TRIGRAMINDEXENGINE_HPP
+#ifndef VECTORSPACEMODELENGINE_HPP
+#define VECTORSPACEMODELENGINE_HPP
 
-#include "../../FullTextSearchEngine.hpp"
+#include "../../fts_engine.hpp"
 
-class TrigramIndexEngine : public FullTextSearchEngine {
+class VectorSpaceModelEngine : public FullTextSearchEngine {
 public:
     void indexDocuments(DocumentIterator it) override;
 
@@ -16,4 +16,4 @@ public:
 private:
 };
 
-#endif  // TRIGRAMINDEXENGINE_HPP
+#endif  // VECTORSPACEMODELENGINE_HPP
