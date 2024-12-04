@@ -88,14 +88,12 @@ bool DocumentIterator::hasNext() {
         }
     }
 }
-std::shared_ptr<Document> DocumentIterator::operator*() {
 
+std::shared_ptr<Document> DocumentIterator::operator*() {
     int32_t length = 0;
     const uint8_t *value = data_array->GetValue(current_row_index, &length);
 
-
     std::shared_ptr<arrow::Buffer> buffer = data_array->value_data();
-
 
     auto *data_ptr = reinterpret_cast<const char *>(value);
 
@@ -109,6 +107,7 @@ void DocumentIterator::operator++() {
     current_row_index++;
     doc_id++;
 }
+
 void DocumentIterator::operator++(int) {
     ++(*this);
 }
