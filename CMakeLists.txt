@@ -24,6 +24,11 @@ add_library(fts_lib
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/algorithms/vsm/vector_space_model_engine.hpp
+        src/algorithms/vsm/index/hnsw/HNSWAlg.h
+        src/algorithms/vsm/index/VectorSpaceLib.h
+        src/algorithms/vsm/index/hnsw/HNSWAlg.cpp
+        src/algorithms/vsm/index/hnsw/spaces/L2Space.h
+        src/algorithms/vsm/index/hnsw/VisitedList.h
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c
@@ -36,6 +41,7 @@ add_library(fts_lib
         src/tokenizer/simpletokenizer.cpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
+
 )
 
 set(OBJECT_FILES
