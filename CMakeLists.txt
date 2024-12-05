@@ -23,6 +23,11 @@ add_executable(untitled
         src/dataUtils/DocumentUtils.hpp
         src/dataUtils/DocumentIterator.cpp
         src/dataUtils/DocumentIterator.hpp
+        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.h
+        src/algorithms/VectorSpaceModel/index/VectorSpaceLib.h
+        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.cpp
+        src/algorithms/VectorSpaceModel/index/hnsw/spaces/L2Space.h
+        src/algorithms/VectorSpaceModel/index/hnsw/VisitedList.h
 )
 
 target_link_libraries(untitled PRIVATE arrow_shared parquet_shared)

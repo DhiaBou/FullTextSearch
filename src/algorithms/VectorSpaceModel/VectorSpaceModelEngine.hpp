@@ -9,6 +9,9 @@
 
 class VectorSpaceModelEngine : public FullTextSearchEngine {
 public:
+
+    VectorSpaceModelEngine();
+
     void indexDocuments(DocumentIterator it) override;
 
     std::vector<std::shared_ptr<Document> > search(const std::string &query) override;
