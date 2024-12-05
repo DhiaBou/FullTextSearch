@@ -43,6 +43,11 @@ add_library(fts_lib
         src/tokenizer/simpletokenizer.cpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
+        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.h
+        src/algorithms/VectorSpaceModel/index/VectorSpaceLib.h
+        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.cpp
+        src/algorithms/VectorSpaceModel/index/hnsw/spaces/L2Space.h
+        src/algorithms/VectorSpaceModel/index/hnsw/VisitedList.h
 )
 
 target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)
