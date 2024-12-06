@@ -86,6 +86,7 @@ bool DocumentIterator::hasNext() {
 
 std::shared_ptr<Document> DocumentIterator::operator*() {
   int32_t length = 0;
+
   const uint8_t *value = data_array->GetValue(current_row_index, &length);
 
   std::shared_ptr<arrow::Buffer> buffer = data_array->value_data();
