@@ -5,16 +5,15 @@
 #ifndef INVERTEDINDEXENGINE_HPP
 #define INVERTEDINDEXENGINE_HPP
 
-#include "../../FullTextSearchEngine.hpp"
+#include "../../fts_engine.hpp"
 
 class InvertedIndexEngine : public FullTextSearchEngine {
-public:
-    void indexDocuments(DocumentIterator it) override;
+ public:
+  void indexDocuments(DocumentIterator it) override;
 
-    std::vector<std::shared_ptr<Document> > search(const std::string &query) override;
+  std::vector<uint32_t> search(const std::string &query) override;
 
-private:
+ private:
 };
 
 #endif  // INVERTEDINDEXENGINE_HPP
-
