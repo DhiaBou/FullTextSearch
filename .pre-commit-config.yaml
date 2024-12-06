@@ -3,3 +3,10 @@ repos:
     rev: ''
     hooks:
       - id: clang-format
+
+  - repo: local
+    hooks:
+      - id: build-check
+        name: Build Check
+        entry: bash -c "cmake -S . -B build && cmake --build build"
+        language: system

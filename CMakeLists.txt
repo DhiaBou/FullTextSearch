@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.28)
 project(fts)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -12,12 +12,16 @@ add_executable(fts
         src/documents/document.hpp
         src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
-        src/algorithms/inverted/inverted_index_engine.cpp
-        src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/algorithms/vsm/vector_space_model_engine.hpp
+        src/algorithms/InvertedIndex/tokenizer/tokenizer.cpp
+        src/algorithms/InvertedIndex/tokenizer/tokenizer.hpp
+        src/algorithms/InvertedIndex/tokenizer/token.cpp
+        src/algorithms/InvertedIndex/tokenizer/token.hpp
+        src/algorithms/InvertedIndex/inverted_index_engine.cpp
+        src/algorithms/InvertedIndex/inverted_index_engine.hpp
 )
 
 target_link_libraries(fts PRIVATE arrow_shared parquet_shared)

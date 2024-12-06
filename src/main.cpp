@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "algorithms/inverted/inverted_index_engine.hpp"
+#include "algorithms/InvertedIndex/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
 #include "algorithms/vsm/vector_space_model_engine.hpp"
 #include "documents/document.hpp"
