@@ -1,12 +1,19 @@
 #ifndef RANKING_HPP
 #define RANKING_HPP
 //---------------------------------------------------------------------------
+#include <cmath>
 #include <cstdint>
 #include <vector>
 //---------------------------------------------------------------------------
 namespace ranking {
 //---------------------------------------------------------------------------
+/**
+ * Wraps statistics for a query.
+ */
 struct QueryStats {
+  /**
+   * Wraps statistics for a query word.
+   */
   struct QueryWordStats {
     /// The number of times the query word appears in the document.
     uint32_t frequency;
@@ -17,6 +24,9 @@ struct QueryStats {
   std::vector<QueryWordStats> query_words;
 };
 //---------------------------------------------------------------------------
+/**
+ * Wraps statistics for a document.
+ */
 struct DocStats {
   /// The associated document's ID.
   uint32_t doc_id;
@@ -24,11 +34,20 @@ struct DocStats {
   uint32_t doc_length;
 };
 //---------------------------------------------------------------------------
+/**
+ * Abstract base class for ranking algorithms.
+ */
 class Ranking {
  public:
   /// Destructor.
   virtual ~Ranking() = default;
-  /// Calculates a score for a given document and query.
+  /**
+   * Calculates a score for a given document and query.
+   *
+   * @param doc_stats The statistics for the document.
+   * @param query_stats The statistics for the query.
+   * @return The calculated score for the document and query.
+   */
   virtual double score(const DocStats& doc_stats, const QueryStats& query_stats) = 0;
 };
 //---------------------------------------------------------------------------
