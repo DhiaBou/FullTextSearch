@@ -13,9 +13,13 @@ class BM25 : public Ranking {
   double score(const DocStats& doc_stats, const QueryStats& query_stats) override;
 
  private:
+  /// The total number of documents.
   const uint32_t doc_count;
+  /// The average length of documents in words.
   const uint32_t avg_doc_length;
+  /// A constant.
   const double k1;
+  /// A scaling factor.
   const double b;
 };
 //---------------------------------------------------------------------------

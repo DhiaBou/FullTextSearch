@@ -13,6 +13,7 @@ class TfIdf : public Ranking {
   double score(const DocStats& doc_stats, const QueryStats& query_stats) override;
 
  private:
+  /// The total number of documents.
   const uint32_t doc_count;
 };
 //---------------------------------------------------------------------------
