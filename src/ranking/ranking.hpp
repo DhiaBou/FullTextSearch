@@ -39,7 +39,7 @@ class Ranking {
  * @param doc_frequency The number of documents containing the term.
  * @return The IDF value.
  */
-double idf(uint32_t doc_count, uint32_t doc_frequency) {
+inline double idf(uint32_t doc_count, uint32_t doc_frequency) {
   return std::log((doc_count - doc_frequency + 0.5) / (doc_frequency + 0.5) + 1);
 }
 //---------------------------------------------------------------------------
