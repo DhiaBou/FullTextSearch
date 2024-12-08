@@ -1,6 +1,6 @@
 #include "tf_idf.hpp"
 //---------------------------------------------------------------------------
-namespace ranking {
+namespace scoring {
 //---------------------------------------------------------------------------
 TfIdf::TfIdf(uint32_t doc_count) : doc_count(doc_count) {}
 //---------------------------------------------------------------------------
@@ -12,4 +12,4 @@ double TfIdf::score(const DocStats& doc_stats, const QueryStats& query_stats) {
   return result;
 }
 //---------------------------------------------------------------------------
-}  // namespace ranking
+}  // namespace scoring

@@ -1,11 +1,11 @@
 #ifndef BM25_HPP
 #define BM25_HPP
 //---------------------------------------------------------------------------
-#include "ranking.hpp"
+#include "scoring_function.hpp"
 //---------------------------------------------------------------------------
-namespace ranking {
+namespace scoring {
 //---------------------------------------------------------------------------
-class BM25 : public Ranking {
+class BM25 : public ScoringFunction {
  public:
   /// Constructor.
   BM25(uint32_t doc_count, uint32_t avg_doc_length, double k1, double b);
@@ -23,6 +23,6 @@ class BM25 : public Ranking {
   const double b;
 };
 //---------------------------------------------------------------------------
-}  // namespace ranking
+}  // namespace scoring
 //---------------------------------------------------------------------------
 #endif  // BM25_HPP

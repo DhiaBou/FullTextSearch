@@ -1,6 +1,6 @@
 #include "bm25.hpp"
 //---------------------------------------------------------------------------
-namespace ranking {
+namespace scoring {
 //---------------------------------------------------------------------------
 BM25::BM25(uint32_t doc_count, uint32_t avg_doc_length, double k1, double b)
     : doc_count(doc_count), avg_doc_length(avg_doc_length), k1(k1), b(b) {}
@@ -15,4 +15,4 @@ double BM25::score(const DocStats& doc_stats, const QueryStats& query_stats) {
   return result;
 }
 //---------------------------------------------------------------------------
-}  // namespace ranking
+}  // namespace scoring

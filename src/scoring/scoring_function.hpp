@@ -1,11 +1,11 @@
-#ifndef RANKING_HPP
-#define RANKING_HPP
+#ifndef SCORING_FUNCTION_HPP
+#define SCORING_FUNCTION_HPP
 //---------------------------------------------------------------------------
 #include <cmath>
 #include <cstdint>
 #include <vector>
 //---------------------------------------------------------------------------
-namespace ranking {
+namespace scoring {
 //---------------------------------------------------------------------------
 /**
  * Wraps statistics for a query.
@@ -35,12 +35,12 @@ struct DocStats {
 };
 //---------------------------------------------------------------------------
 /**
- * Abstract base class for ranking algorithms.
+ * Abstract base class for scoring functions.
  */
-class Ranking {
+class ScoringFunction {
  public:
   /// Destructor.
-  virtual ~Ranking() = default;
+  virtual ~ScoringFunction() = default;
   /**
    * Calculates a score for a given document and query.
    *
@@ -62,6 +62,6 @@ inline double idf(uint32_t doc_count, uint32_t doc_frequency) {
   return std::log((doc_count - doc_frequency + 0.5) / (doc_frequency + 0.5) + 1);
 }
 //---------------------------------------------------------------------------
-}  // namespace ranking
+}  // namespace scoring
 //---------------------------------------------------------------------------
-#endif  // RANKING_HPP
+#endif  // SCORING_FUNCTION_HPP

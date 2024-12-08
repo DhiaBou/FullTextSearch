@@ -1,11 +1,11 @@
 #ifndef TF_IDF_HPP
 #define TF_IDF_HPP
 //---------------------------------------------------------------------------
-#include "ranking.hpp"
+#include "scoring_function.hpp"
 //---------------------------------------------------------------------------
-namespace ranking {
+namespace scoring {
 //---------------------------------------------------------------------------
-class TfIdf : public Ranking {
+class TfIdf : public ScoringFunction {
  public:
   /// Constructor.
   explicit TfIdf(uint32_t doc_count);
@@ -17,6 +17,6 @@ class TfIdf : public Ranking {
   const uint32_t doc_count;
 };
 //---------------------------------------------------------------------------
-}  // namespace ranking
+}  // namespace scoring
 //---------------------------------------------------------------------------
 #endif  // TF_IDF_HPP
