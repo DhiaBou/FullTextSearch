@@ -7,6 +7,7 @@
 
 #include "documents/document.hpp"
 #include "documents/document_iterator.hpp"
+#include "scoring/scoring_function.hpp"
 
 /**
  * @brief Interface for full-text search engines.
@@ -40,7 +41,20 @@ class FullTextSearchEngine {
    * @param query The search query as a string.
    * @return A vector of document IDs that match the query.
    */
-  virtual std::vector<uint32_t> search(const std::string &query) = 0;
+  virtual std::vector<uint32_t> search(const std::string &query,
+                                       const scoring::ScoringFunction &score_func) = 0;
+  /**
+   * @brief Gets the number of indexed documents.
+   *
+   * @return The number of indexed documents.
+   */
+  virtual uint32_t getDocumentCount() = 0;
+  /**
+   * @brief Gets the indexed documents' average length in words.
+   *
+   * @return The indexed documents' average length.
+   */
+  virtual double getAvgDocumentLength() = 0;
 };
 
 #endif  // FTS_ENGINE_HPP

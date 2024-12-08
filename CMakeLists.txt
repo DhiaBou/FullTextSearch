@@ -12,6 +12,11 @@ add_executable(fts
         src/documents/document.hpp
         src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
+        src/scoring/scoring_function.hpp
+        src/scoring/bm25.hpp
+        src/scoring/bm25.cpp
+        src/scoring/tf_idf.hpp
+        src/scoring/tf_idf.cpp
         src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
