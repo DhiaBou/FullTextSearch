@@ -23,6 +23,16 @@ struct QueryWordStats {
 };
 //---------------------------------------------------------------------------
 /**
+ * Wraps statistics for a query word.
+ */
+struct QueryWordStats {
+  /// The number of times the query word appears in the document.
+  uint32_t frequency;
+  /// The number of documents the query word appears in.
+  uint32_t total_count;
+};
+//---------------------------------------------------------------------------
+/**
  * Wraps statistics for a query.
  */
 struct QueryStats {
