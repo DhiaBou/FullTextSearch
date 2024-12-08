@@ -10,7 +10,7 @@ class TfIdf : public ScoringFunction {
   /// Constructor.
   explicit TfIdf(uint32_t doc_count);
   /// Calculates the BM25 score for a given document and query.
-  double score(const DocStats& doc_stats, const QueryStats& query_stats) override;
+  double score(const DocStats& doc_stats, const QueryStats& query_stats) const override;
 
  private:
   /// The total number of documents.

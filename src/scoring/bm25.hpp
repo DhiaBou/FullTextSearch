@@ -10,7 +10,7 @@ class BM25 : public ScoringFunction {
   /// Constructor.
   BM25(uint32_t doc_count, uint32_t avg_doc_length, double k1, double b);
   /// Calculates the BM25 score for a given document and query.
-  double score(const DocStats& doc_stats, const QueryStats& query_stats) override;
+  double score(const DocStats& doc_stats, const QueryStats& query_stats) const override;
 
  private:
   /// The total number of documents.
