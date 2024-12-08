@@ -62,6 +62,25 @@ int main(int argc, char** argv) {
   // Build the index
   engine->indexDocuments(std::move(it));
 
+  // Scoring
+  std::unique_ptr<scoring::ScoringFunction> score_func;
+  std::string scoring_choice;
+
+  do {
+    std::cout << "Select the function to score documents (bm25/tf-idf): ";
+    std::getline(std::cin, scoring_choice);
+    if (scoring_choice == "bm25") {
+      double k1 = 1.5;
+      double b = 0.75;
+      score_func = std::make_unique<scoring::BM25>(engine->getDocumentCount(),
+                                                   engine->getAvgDocumentLength(), k1, b);
+    } else if (scoring_choice == "tf-idf") {
+      score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
+    } else {
+      std::cout << "Invalid choice!" << std::endl;
+    }
+  } while (score_func == nullptr);
+
 
   std::string query;
   while (true) {
@@ -72,6 +91,7 @@ int main(int argc, char** argv) {
       break;
     }
 
+    auto results = engine->search(query, *score_func);
     auto results = engine->search(query, *score_func);
 
     for (const auto& doc : results) {
