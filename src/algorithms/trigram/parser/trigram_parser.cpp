@@ -5,7 +5,7 @@
 namespace trigramlib {
 //---------------------------------------------------------------------------
 TrigramParser::TrigramParser(const char* begin, const char* end)
-    : end(end), it(begin), word_begin(begin), trigram_begin(begin), offset(0) {}
+    : end(end), it(begin), word_begin(begin), trigram_begin(begin), trigram(0) {}
 //---------------------------------------------------------------------------
 bool TrigramParser::hasNext() {
   bool found = false;
@@ -18,24 +18,18 @@ bool TrigramParser::hasNext() {
         assert(it - trigram_begin == 2);
         assert(trigram_begin >= word_begin);
 
+        auto offset = trigram_begin - word_begin;
+        trigram = Trigram(trigram_begin, static_cast<uint8_t>(offset));
         found = true;
-
-        trigram[0] = static_cast<char>(std::tolower(*trigram_begin));
-        trigram[1] = static_cast<char>(std::tolower(*(trigram_begin + 1)));
-        trigram[2] = static_cast<char>(std::tolower(*(trigram_begin + 2)));
-        offset = static_cast<uint8_t>(trigram_begin - word_begin);
 
         ++trigram_begin;
       }
     } else {
       if (it - word_begin == 2) {
         // stand-alone two-character "trigram"
+        char data[3] = {*word_begin, *(word_begin + 1), '\0'};
+        trigram = Trigram(data, 0);
         found = true;
-
-        trigram[0] = static_cast<char>(std::tolower(*word_begin));
-        trigram[1] = static_cast<char>(std::tolower(*(word_begin + 1)));
-        trigram[2] = '\0';
-        offset = 0;
       }
 
       trigram_begin = it + 1;
@@ -49,6 +43,6 @@ bool TrigramParser::hasNext() {
   return false;
 }
 //---------------------------------------------------------------------------
-Trigram TrigramParser::next() const { return {trigram, offset}; }
+Trigram TrigramParser::next() const { return trigram; }
 //---------------------------------------------------------------------------
 }  // namespace trigramlib
