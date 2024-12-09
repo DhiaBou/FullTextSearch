@@ -41,7 +41,8 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
   auto avg_doc_length = total_trigram_count / doc_count;
 }
 //---------------------------------------------------------------------------
-std::vector<uint32_t> TrigramIndexEngine::search(const std::string& query) {
+std::vector<DocumentID> TrigramIndexEngine::search(const std::string& query,
+                                                   const scoring::ScoringFunction& score_func) {
   std::vector<trigramlib::Trigram> trigrams;
 
   auto parser = trigramlib::TrigramParser(query.c_str(), query.c_str() + query.size());
@@ -75,3 +76,7 @@ std::vector<uint32_t> TrigramIndexEngine::search(const std::string& query) {
 
   return std::vector<uint32_t>();
 }
+//---------------------------------------------------------------------------
+uint32_t TrigramIndexEngine::getDocumentCount() { return 0; }
+//---------------------------------------------------------------------------
+double TrigramIndexEngine::getAvgDocumentLength() { return 0; }
