@@ -9,6 +9,8 @@
 #include "documents/document_iterator.hpp"
 #include "scoring/scoring_function.hpp"
 
+using DocumentID = uint32_t;
+
 /**
  * @brief Interface for full-text search engines.
  *
@@ -41,8 +43,8 @@ class FullTextSearchEngine {
    * @param query The search query as a string.
    * @return A vector of document IDs that match the query.
    */
-  virtual std::vector<uint32_t> search(const std::string &query,
-                                       const scoring::ScoringFunction &score_func) = 0;
+  virtual std::vector<DocumentID> search(const std::string &query,
+                                         const scoring::ScoringFunction &score_func) = 0;
   /**
    * @brief Gets the number of indexed documents.
    *
