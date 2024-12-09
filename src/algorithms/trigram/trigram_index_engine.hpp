@@ -16,7 +16,7 @@ class TrigramIndexEngine : public FullTextSearchEngine {
 
  private:
   /// The underlying index.
-  HashIndex<16> index;
+  trigramlib::HashIndex<16> index;
 };
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_INDEX_ENGINE_HPP

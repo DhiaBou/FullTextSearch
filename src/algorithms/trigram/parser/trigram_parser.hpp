@@ -7,6 +7,8 @@
 //---------------------------------------------------------------------------
 #include "models/trigram.hpp"
 //---------------------------------------------------------------------------
+namespace trigramlib {
+//---------------------------------------------------------------------------
 constexpr std::array<bool, 128> generateWhitelist() {
   std::array<bool, 128> whitelist = {false};
   for (char c = '0'; c <= '9'; ++c) {
@@ -50,5 +52,7 @@ class TrigramParser {
   /// The trigram produced by the hasNext call.
   Trigram trigram;
 };
+//---------------------------------------------------------------------------
+}  // namespace trigramlib
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_PARSER_H

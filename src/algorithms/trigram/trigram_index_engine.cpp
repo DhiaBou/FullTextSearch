@@ -15,12 +15,12 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
   while (doc_it.hasNext()) {
     auto doc = *doc_it;
     uint32_t doc_length = 0;
-    std::unordered_map<Trigram, uint32_t> appearances;
+    std::unordered_map<trigramlib::Trigram, uint32_t> appearances;
 
     const char* begin = doc->getData();
     const char* end = doc->getData() + doc->getSize();
 
-    auto parser = TrigramParser(begin, end);
+    auto parser = trigramlib::TrigramParser(begin, end);
     while (parser.hasNext()) {
       ++appearances[parser.next()];
       ++doc_length;
@@ -42,9 +42,9 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
 }
 //---------------------------------------------------------------------------
 std::vector<uint32_t> TrigramIndexEngine::search(const std::string& query) {
-  std::vector<Trigram> trigrams;
+  std::vector<trigramlib::Trigram> trigrams;
 
-  auto parser = TrigramParser(query.c_str(), query.c_str() + query.size());
+  auto parser = trigramlib::TrigramParser(query.c_str(), query.c_str() + query.size());
   while (parser.hasNext()) {
     trigrams.push_back(parser.next());
   }

@@ -8,6 +8,8 @@
 #include "models/doc_freq.hpp"
 #include "models/trigram.hpp"
 //---------------------------------------------------------------------------
+namespace trigramlib {
+//---------------------------------------------------------------------------
 template <uint8_t BucketSize>
 class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
  public:
@@ -37,5 +39,7 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
   /// A mapping of trigram to buckets.
   std::unordered_map<Trigram, Bucket<std::vector<DocFreq>, BucketSize>> table;
 };
+//---------------------------------------------------------------------------
+}  // namespace trigramlib
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_HASH_INDEX_HPP

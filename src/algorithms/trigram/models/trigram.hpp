@@ -5,6 +5,8 @@
 #include <functional>
 #include <ostream>
 //---------------------------------------------------------------------------
+namespace trigramlib {
+//---------------------------------------------------------------------------
 struct Trigram {
  public:
   /// Constructor from raw value.
@@ -36,13 +38,17 @@ struct Trigram {
   uint32_t value;
 };
 //---------------------------------------------------------------------------
+}  // namespace trigramlib
+//---------------------------------------------------------------------------
 namespace std {
+//---------------------------------------------------------------------------
 template <>
-struct hash<Trigram> {
-  std::size_t operator()(const Trigram& trigram) const noexcept {
+struct hash<trigramlib::Trigram> {
+  std::size_t operator()(const trigramlib::Trigram& trigram) const noexcept {
     return std::hash<uint32_t>{}(trigram.get());
   }
 };
+//---------------------------------------------------------------------------
 }  // namespace std
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_HPP

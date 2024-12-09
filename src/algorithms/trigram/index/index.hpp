@@ -5,6 +5,8 @@
 //---------------------------------------------------------------------------
 #include "models/trigram.hpp"
 //---------------------------------------------------------------------------
+namespace trigramlib {
+//---------------------------------------------------------------------------
 template <typename ValueT, typename ContainerT, uint8_t BucketSize>
 class Index {
  public:
@@ -23,5 +25,7 @@ struct Bucket {
   /// The number of chains referenced by the bucket.
   uint8_t getSize() const { return Size; }
 };
+//---------------------------------------------------------------------------
+}  // namespace trigramlib
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_INDEX_INTERFACE_HPP
