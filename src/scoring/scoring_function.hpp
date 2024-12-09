@@ -49,7 +49,8 @@ class ScoringFunction {
    * @param query_stats The statistics for the query.
    * @return The calculated score for the document and query.
    */
-  virtual double score(const DocStats& doc_stats, const QueryStats& query_stats) const = 0;
+  [[nodiscard]] virtual double score(const DocStats& doc_stats,
+                                     const QueryStats& query_stats) const = 0;
 };
 //---------------------------------------------------------------------------
 /**
