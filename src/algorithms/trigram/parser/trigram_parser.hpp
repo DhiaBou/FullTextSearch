@@ -37,7 +37,7 @@ class TrigramParser {
 
  private:
   /// A whitelist of ASCII characters allowed in the trigrams.
-  static constexpr std::array<bool, 128> white_list = generateWhitelist();
+  static constexpr std::array<bool, 128> kWhiteList = generateWhitelist();
 
   /// The end of the text to parse.
   const char* end;

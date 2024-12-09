@@ -10,7 +10,7 @@ bool TrigramParser::hasNext() {
 
   while (it < end) {
     auto c = static_cast<unsigned char>(*it);
-    if (c < 128 && white_list[c]) {
+    if (c < 128 && kWhiteList[c]) {
       if (it - trigram_begin >= 2) {
         // three consecutive white-listed ASCII characters
         assert(it - trigram_begin == 2);

@@ -1,5 +1,5 @@
-#ifndef TRIGRAMINDEXENGINE_HPP
-#define TRIGRAMINDEXENGINE_HPP
+#ifndef TRIGRAM_INDEX_ENGINE_HPP
+#define TRIGRAM_INDEX_ENGINE_HPP
 //---------------------------------------------------------------------------
 #include <unordered_set>
 //---------------------------------------------------------------------------
@@ -19,4 +19,4 @@ class TrigramIndexEngine : public FullTextSearchEngine {
   HashIndex<16> index;
 };
 //---------------------------------------------------------------------------
-#endif  // TRIGRAMINDEXENGINE_HPP
+#endif  // TRIGRAM_INDEX_ENGINE_HPP
