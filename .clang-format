@@ -1,18 +1,2 @@
-# .clang-format
-
-BasedOnStyle: Google
-IndentWidth: 4
-TabWidth: 4
-UseTab: Never
+BasedOnStyle:  Google
 ColumnLimit: 100
-AllowShortFunctionsOnASingleLine: Inline
-BraceWrapping:
-  AfterClass: true
-  AfterControlStatement: true
-  AfterFunction: true
-  AfterNamespace: true
-  BeforeElse: true
-DerivePointerAlignment: false
-PointerAlignment: Left
-SpaceBeforeParens: ControlStatements
-SortIncludes: true

@@ -1,58 +1,51 @@
 #include <iostream>
-
-#include "FullTextSearchEngine.hpp"
-#include "algorithms/DummySearch/DummySearchEngine.hpp"
-#include "algorithms/InvertedIndex/InvertedIndexEngine.hpp"
-#include "algorithms/TrigramIndex/TrigramIndexEngine.hpp"
-#include "algorithms/VectorSpaceModel/VectorSpaceModelEngine.hpp"
-#include "dataUtils/Document.hpp"
-#include "dataUtils/DocumentIterator.hpp"
-#include "dataUtils/DocumentUtils.hpp"
 #include <string>
 
+#include "algorithms/inverted/inverted_index_engine.hpp"
+#include "algorithms/trigram/trigram_index_engine.hpp"
+#include "algorithms/vsm/vector_space_model_engine.hpp"
+#include "documents/document.hpp"
+#include "documents/document_iterator.hpp"
+#include "fts_engine.hpp"
+
 int main() {
-    // Choose search engine algorithm
-    FullTextSearchEngine *engine = nullptr;
-    std::string algorithmChoice;
+  std::unique_ptr<FullTextSearchEngine> engine;
 
+  // Specify path to the data
+  std::string directory_path;
+  std::cout << "Enter the absolute path to the data: ";
+  std::getline(std::cin, directory_path);
+  DocumentIterator it(directory_path);
 
-    std::string directoryPath;
-    std::cout << "Enter search directory absolute path: ";
-    std::cin >> directoryPath;
+  // Choose the algorithm
+  std::string algorithm_choice;
+  do {
+    std::cout << "Select search algorithm (vsm/inverted/trigram): ";
+    std::getline(std::cin, algorithm_choice);
+    if (algorithm_choice == "vsm") {
+      engine = std::make_unique<VectorSpaceModelEngine>();
+    } else if (algorithm_choice == "inverted") {
+      engine = std::make_unique<InvertedIndexEngine>();
+    } else if (algorithm_choice == "trigram") {
+      engine = std::make_unique<TrigramIndexEngine>();
+    } else {
+      std::cout << "Invalid choice!" << std::endl;
+    }
+  } while (engine == nullptr);
 
-    DocumentIterator it(directoryPath);
+  // Build the index
+  engine->indexDocuments(std::move(it));
 
-    do {
-        std::cout << "Select search algorithm (vsm/inverted/trigram/dummy): ";
-        std::cin >> algorithmChoice;
-        if (algorithmChoice == "vsm") {
-            engine = new VectorSpaceModelEngine();
-        } else if (algorithmChoice == "inverted") {
-            engine = new InvertedIndexEngine();
-        } else if (algorithmChoice == "trigram") {
-            engine = new TrigramIndexEngine();
-        } else if (algorithmChoice == "dummy") {
-            engine = new DummySearchEngine();
-        } else {
-            std::cout << "Invalid choice!" << std::endl;
-        }
-    } while (engine == nullptr);
+  // Search
+  std::string query;
+  while (true) {
+    std::cout << "Enter search query: ";
+    std::getline(std::cin, query);
 
-     engine->indexDocuments(std::move(it));
+    auto results = engine->search(query);
 
-     std::string query;
-     while (true) {
-         std::cout << "Enter search query (or 'exit' to quit): ";
-         std::cin >> query;
-         if (query == "exit") break;
-
-         auto results = engine->search(query);
-
-         for (const auto &doc: results) {
-             std::cout << "Document ID: " << doc->getId() << std::endl;
-         }
-     }
-
-    delete engine;
-    return 0;
+    for (const auto &doc : results) {
+      std::cout << "Document ID: " << doc << std::endl;
+    }
+  }
 }

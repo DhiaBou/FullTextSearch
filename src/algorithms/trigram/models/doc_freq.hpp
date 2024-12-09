@@ -1,4 +1,3 @@
-//---------------------------------------------------------------------------
 #ifndef TRIGRAM_DOCFREQ_HPP
 #define TRIGRAM_DOCFREQ_HPP
 //---------------------------------------------------------------------------
@@ -10,10 +9,10 @@
  * number of appearances in this document.
  */
 struct DocFreq {
-    /// The document's document-ID.
-    uint32_t doc_id;
-    /// The number of appearances of a Trigram.
-    uint32_t freq;
+  /// The document's document-ID.
+  uint32_t doc_id;
+  /// The number of appearances of a Trigram.
+  uint32_t freq;
 };
 //---------------------------------------------------------------------------
-#endif // TRIGRAM_DOCFREQ_HPP
+#endif  // TRIGRAM_DOCFREQ_HPP
