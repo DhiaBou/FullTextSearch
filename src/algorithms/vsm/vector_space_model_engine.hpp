@@ -11,7 +11,12 @@ class VectorSpaceModelEngine : public FullTextSearchEngine {
  public:
   void indexDocuments(DocumentIterator it) override;
 
-  std::vector<uint32_t> search(const std::string &query) override;
+  std::vector<DocumentID> search(const std::string &query,
+                                 const scoring::ScoringFunction &score_func) override;
+
+  uint32_t getDocumentCount() override;
+
+  double getAvgDocumentLength() override;
 
  private:
 };
