@@ -1,11 +1,13 @@
 //
-// Created by fts on 10/31/24.
+// Created by dhia on 12/6/24.
 //
 
-#ifndef INVERTEDINDEXENGINE_HPP
-#define INVERTEDINDEXENGINE_HPP
+#ifndef INVERTED_INDEX_ENGINE_HPP
+#define INVERTED_INDEX_ENGINE_HPP
 
 #include "../../fts_engine.hpp"
+
+struct Token;
 
 class InvertedIndexEngine : public FullTextSearchEngine {
  public:
@@ -19,6 +21,16 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
+  double docScoreForToken(uint32_t docId, const Token &token);
+
+  double average_doc_length_ = -1.0;
+
+  /// key is token, value is a map of doc id to term frequency
+  std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t> >
+      term_frequency_per_document_;
+
+  /// key is document id, value is number of tokens or terms
+  std::unordered_map<DocumentID, uint32_t> tokens_per_document_;
 };
 
-#endif  // INVERTEDINDEXENGINE_HPP
+#endif  // INVERTED_INDEX_ENGINE_HPP
