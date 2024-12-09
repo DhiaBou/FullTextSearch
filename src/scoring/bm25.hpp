@@ -8,7 +8,7 @@ namespace scoring {
 class BM25 : public ScoringFunction {
  public:
   /// Constructor.
-  BM25(uint32_t doc_count, uint32_t avg_doc_length, double k1, double b);
+  BM25(uint32_t doc_count, double avg_doc_length, double k1, double b);
   /// Calculates the BM25 score for a given document and query.
   double score(const DocStats& doc_stats, const QueryStats& query_stats) const override;
 
@@ -16,7 +16,7 @@ class BM25 : public ScoringFunction {
   /// The total number of documents.
   const uint32_t doc_count;
   /// The average length of documents in words.
-  const uint32_t avg_doc_length;
+  const double avg_doc_length;
   /// A constant.
   const double k1;
   /// A scaling factor.
