@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "tokenizer/tokenizer.hpp"
+#include "../../tokenizer/tokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
   do {
@@ -19,11 +19,11 @@ void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
     Tokenizer tokenizer(begin, doc->getSize());
 
     while (tokenizer.hasMoreTokens()) {
-      Token token = tokenizer.nextToken();
+      std::string token = tokenizer.nextToken();
 
       if (!token.empty()) {
         // increment the number of times a token appeared in that document
-        term_frequency_per_document_[token.getString()][doc->getId()]++;
+        term_frequency_per_document_[token][doc->getId()]++;
         // increase the total number of terms in doc d
         tokens_per_document_[doc->getId()]++;
       }

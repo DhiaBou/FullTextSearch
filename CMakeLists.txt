@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
 
+# Add executable
 add_executable(fts
         src/main.cpp
         src/fts_engine.hpp
@@ -23,13 +24,21 @@ add_executable(fts
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/algorithms/vsm/vector_space_model_engine.hpp
-        src/algorithms/inverted/tokenizer/tokenizer.cpp
-        src/algorithms/inverted/tokenizer/tokenizer.hpp
-        src/algorithms/inverted/tokenizer/token.cpp
-        src/algorithms/inverted/tokenizer/token.hpp
+        src/tokenizer/snowball/api.h
+        src/tokenizer/snowball/header.h
+        src/tokenizer/snowball/stem_UTF_8_english.h
+        src/tokenizer/tokenizer.cpp
+        src/tokenizer/tokenizer.hpp
+        src/tokenizer/token.cpp
+        src/tokenizer/token.hpp
         src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/inverted/inverted_index_engine.hpp
 )
 
-target_link_libraries(fts PRIVATE arrow_shared parquet_shared)
+set(OBJECT_FILES
+        ${CMAKE_SOURCE_DIR}/src/tokenizer/snowball/stem_UTF_8_english.o
+        ${CMAKE_SOURCE_DIR}/src/tokenizer/snowball/api.o
+        ${CMAKE_SOURCE_DIR}/src/tokenizer/snowball/utilities.o
+)
 
+target_link_libraries(fts PRIVATE arrow_shared parquet_shared ${OBJECT_FILES})

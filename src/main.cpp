@@ -11,6 +11,25 @@
 #include "scoring/scoring_function.hpp"
 #include "scoring/tf_idf.hpp"
 
+// #include "tokenizer/snowball/stem_UTF_8_english.h"
+// #include "tokenizer/snowball/api.h"
+// #include <iostream>
+// #include <cstring> // For strlen
+//
+// int main() {
+//   struct SN_env * z = english_UTF_8_create_env();  // Create an environment
+//   const char * word = "ate";
+//   SN_set_current(z, strlen(word), reinterpret_cast<const symbol*>((char *)word));
+//
+//   if (english_UTF_8_stem(z)) {
+//     z->p[z->l] = '\0';  // Null-terminate the resulting string
+//     printf("Stemmed word: %s\n", z->p);
+//   }
+//
+//   english_UTF_8_close_env(z);  // Clean up
+//   return 0;
+// }
+
 int main() {
   std::unique_ptr<FullTextSearchEngine> engine;
 
