@@ -13,7 +13,7 @@
 class Document {
  public:
   /// Constructor.
-  Document(int id, const char *data, size_t size, const std::shared_ptr<arrow::Buffer> &arrow_buf)
+  Document(uint32_t id, const char *data, size_t size, const std::shared_ptr<arrow::Buffer> &arrow_buf)
       : id(id), data(data), size(size), arrow_buf(arrow_buf) {};
   /// Get the document's ID.
   [[nodiscard]] uint32_t getId() const { return id; }

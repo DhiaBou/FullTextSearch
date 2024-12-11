@@ -46,7 +46,7 @@ class DocumentIterator {
   std::shared_ptr<arrow::RecordBatch> current_batch;
   /// The current batch's raw data.
   std::shared_ptr<arrow::BinaryArray> data_array;
-  std::shared_ptr<arrow::Int64Array> doc_id_array;
+  std::shared_ptr<arrow::UInt32Array> doc_id_array;
   /// The current row of the iterator's current batch.
   int64_t current_row_index = 0;
   /// The total number of rows in the iterator's current batch.

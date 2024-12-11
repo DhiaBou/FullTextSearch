@@ -18,12 +18,13 @@ try:
     df = pd.read_csv(args["input"], header=0)
     df_filtered = df[[args["name"], args["id"]]].rename(columns={args["name"]: "text", args["id"]: "id"})
 
+    df_filtered["id"] = df_filtered["id"].astype('uint32')
     print(df_filtered)
 
     metadata = { b'creator': b'CSVParquetConvert'}
     schema = pa.schema([
         pa.field("text", pa.binary()),
-        pa.field("id", pa.int64())
+        pa.field("id", pa.uint32())
     ])
 
     table = pa.Table.from_pandas(df_filtered, preserve_index=False)
