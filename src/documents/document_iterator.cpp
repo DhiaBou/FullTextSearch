@@ -55,7 +55,7 @@ bool DocumentIterator::loadNextBatch() {
   }
 
   data_array = std::dynamic_pointer_cast<arrow::BinaryArray>(current_batch->column(0));
-  doc_id_array = std::dynamic_pointer_cast<arrow::Int64Array>(current_batch->column(1));
+  doc_id_array = std::dynamic_pointer_cast<arrow::UInt32Array>(current_batch->column(1));
   if (!data_array) {
     throw std::runtime_error("Column 0 is not of type BinaryArray");
   }
@@ -94,7 +94,7 @@ std::shared_ptr<Document> DocumentIterator::operator*() {
 
   auto *data_ptr = reinterpret_cast<const char *>(value);
 
-  int64_t doc_id = doc_id_array->GetView(current_row_index);
+  uint32_t doc_id = doc_id_array->GetView(current_row_index);
 
   return std::make_shared<Document>(doc_id, data_ptr, length, buffer);
 }
