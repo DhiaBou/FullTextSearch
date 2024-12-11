@@ -1,29 +1,28 @@
-#include "tokenizer.hpp"
+
+#include "stemmingtokenizer.hpp"
 
 #include "snowball/api.h"
+#include "tokenizer_rules.hpp"
+namespace tokenizer {
 
-static const char DELIMS[] = " \t\n\r.,;:!()[]{}<>?\"'`~@#$%^&*-_=+|\\/";
-
-Tokenizer::Tokenizer(const char *data, size_t size) : data_(data), size_(size), currentPos_(0) {
+StemmingTokenizer::StemmingTokenizer(const char *data, const size_t size)
+    : data_(data), size_(size), currentPos_(0) {
   // Create the Snowball stemmer environment once
   stemEnv_ = english_UTF_8_create_env();
-  for (unsigned char c : DELIMS) {
-    delimiters_[c] = true;
-  }
 }
 
-Tokenizer::~Tokenizer() {
+StemmingTokenizer::~StemmingTokenizer() {
   // Close the Snowball environment
   english_UTF_8_close_env(stemEnv_);
 }
 
-void Tokenizer::skipDelimiters() {
-  while (currentPos_ < size_ && delimiters_[data_[currentPos_]]) {
+void StemmingTokenizer::skipDelimiters() {
+  while (currentPos_ < size_ && isDelimiter(data_[currentPos_])) {
     ++currentPos_;
   }
 }
 
-std::string Tokenizer::nextToken() {
+std::string StemmingTokenizer::nextToken(bool skip_stop_words) {
   skipDelimiters();
 
   if (currentPos_ >= size_) {
@@ -34,7 +33,7 @@ std::string Tokenizer::nextToken() {
   size_t tokenStart = currentPos_;
 
   // Advance until we hit a delimiter or end of data
-  while (currentPos_ < size_ && not delimiters_[data_[currentPos_]]) {
+  while (currentPos_ < size_ && !isDelimiter(data_[currentPos_])) {
     ++currentPos_;
   }
 
@@ -47,8 +46,11 @@ std::string Tokenizer::nextToken() {
     token.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(data_[i]))));
   }
 
+  if (skip_stop_words && isStopWord(token)) {
+    return nextToken(skip_stop_words);
+  }
+
   // Stem the token using Snowball
-  // SN_set_current copies the token into the stem environment
   SN_set_current(stemEnv_, (int)token.size(),
                  reinterpret_cast<const unsigned char *>(token.c_str()));
 
@@ -58,10 +60,4 @@ std::string Tokenizer::nextToken() {
   return std::string(reinterpret_cast<char *>(stemEnv_->p), stemEnv_->l);
 }
 
-bool Tokenizer::hasMoreTokens() const {
-  size_t tempPos = currentPos_;
-  while (tempPos < size_ && delimiters_[data_[tempPos]]) {
-    ++tempPos;
-  }
-  return tempPos < size_;
-}
+}  // namespace tokenizer

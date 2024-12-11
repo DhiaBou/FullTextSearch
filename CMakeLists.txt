@@ -5,10 +5,9 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
+find_package(GTest REQUIRED)
 
-# Add executable
-add_executable(fts
-        src/main.cpp
+add_library(fts_lib
         src/fts_engine.hpp
         src/documents/document.hpp
         src/documents/document_iterator.cpp
@@ -27,12 +26,12 @@ add_executable(fts
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/header.h
         src/tokenizer/snowball/stem_UTF_8_english.h
-        src/tokenizer/tokenizer.cpp
-        src/tokenizer/tokenizer.hpp
-        src/tokenizer/token.cpp
-        src/tokenizer/token.hpp
-        src/algorithms/inverted/inverted_index_engine.cpp
-        src/algorithms/inverted/inverted_index_engine.hpp
+        src/tokenizer/stemmingtokenizer.cpp
+        src/tokenizer/stemmingtokenizer.hpp
+        src/tokenizer/ITokenizer.hpp
+        src/tokenizer/simpletokenizer.cpp
+        src/tokenizer/simpletokenizer.hpp
+        src/tokenizer/tokenizer_rules.hpp
 )
 
 set(OBJECT_FILES
@@ -41,4 +40,11 @@ set(OBJECT_FILES
         ${CMAKE_SOURCE_DIR}/src/tokenizer/snowball/utilities.o
 )
 
-target_link_libraries(fts PRIVATE arrow_shared parquet_shared ${OBJECT_FILES})
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared ${OBJECT_FILES})
+
+add_executable(fts src/main.cpp)
+target_link_libraries(fts PRIVATE fts_lib)
+
+enable_testing()
+
+add_subdirectory(test)

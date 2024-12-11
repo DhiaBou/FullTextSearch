@@ -1,11 +1,11 @@
-#ifndef TOKENIZER_HPP
-#define TOKENIZER_HPP
+#ifndef STEMMINGTOKENIZER_HPP
+#define STEMMINGTOKENIZER_HPP
 
 #include <cctype>
 #include <string>
-#include <unordered_set>
 
-// Forward declare the snowball environment and functions
+#include "ITokenizer.hpp"
+
 struct SN_env;
 extern "C" {
 SN_env *english_UTF_8_create_env();
@@ -13,16 +13,14 @@ void english_UTF_8_close_env(SN_env *);
 int english_UTF_8_stem(SN_env *);
 int SN_set_current(SN_env *, int, const unsigned char *);
 }
+namespace tokenizer {
 
-#include "token.hpp"
-
-class Tokenizer {
+class StemmingTokenizer : public ITokenizer {
  public:
-  Tokenizer(const char *data, size_t size);
-  ~Tokenizer();
+  StemmingTokenizer(const char *data, size_t size);
+  ~StemmingTokenizer() override;
 
-  std::string nextToken();
-  bool hasMoreTokens() const;
+  std::string nextToken(bool skip_stop_words) override;
 
  private:
   void skipDelimiters();
@@ -31,8 +29,6 @@ class Tokenizer {
   size_t size_;
   size_t currentPos_;
   SN_env *stemEnv_;
-
-  bool delimiters_[256]{};
 };
-
-#endif  // TOKENIZER_HPP
+}  // namespace tokenizer
+#endif  // STEMMINGTOKENIZER_HPP
