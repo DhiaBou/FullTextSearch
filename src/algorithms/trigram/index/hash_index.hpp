@@ -32,7 +32,7 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
     if (it != table.end()) {
       return &it->second.containers[key.getWordOffset()];
     }
-    throw std::out_of_range("Trigram not found!");
+    return nullptr;
   }
 
  private:

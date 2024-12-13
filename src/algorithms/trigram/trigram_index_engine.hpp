@@ -22,6 +22,12 @@ class TrigramIndexEngine : public FullTextSearchEngine {
  private:
   /// The underlying index.
   trigramlib::HashIndex<16> index;
+  /// The number of indexed documents.
+  uint32_t doc_count;
+  /// A map from document ID to document length in trigrams.
+  std::unordered_map<DocumentID, uint32_t> doc_to_length;
+  /// The average document length in trigrams.
+  double avg_doc_length;
 };
 //---------------------------------------------------------------------------
 #endif  // TRIGRAM_INDEX_ENGINE_HPP
