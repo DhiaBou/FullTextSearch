@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
+find_package(cxxopts REQUIRED)
 
 add_executable(fts
         src/main.cpp
