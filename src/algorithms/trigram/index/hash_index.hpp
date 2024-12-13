@@ -21,10 +21,10 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
   void insert(Trigram key, DocFreq value) override {
     auto& bucket = table[key];
     uint8_t offset = key.getWordOffset();
-    if (offset > bucket.getSize()) {
-      offset = bucket.getSize() - 1;
+    if (offset >= BucketSize) {
+      offset = BucketSize - 1;
     }
-    bucket.containers[key.getWordOffset()].push_back(value);
+    bucket.containers[offset].push_back(value);
   }
   /// Lookup the value for given trigram.
   std::vector<DocFreq>* lookup(Trigram key) override {
