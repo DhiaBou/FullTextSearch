@@ -8,15 +8,13 @@
 #include "trigram_index_engine.hpp"
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
-  uint32_t doc_count = 0;
   uint64_t total_trigram_count = 0;
-  std::unordered_map<int, uint32_t> doc_to_length;
 
   while (doc_it.hasNext()) {
-    auto doc = *doc_it;
     uint32_t doc_length = 0;
     std::unordered_map<trigramlib::Trigram, uint32_t> appearances;
 
+    auto doc = *doc_it;
     const char* begin = doc->getData();
     const char* end = doc->getData() + doc->getSize();
 
@@ -34,44 +32,52 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
     // update statistics
     total_trigram_count += doc_length;
     doc_to_length[doc->getId()] = doc_length;
-    ++doc_it;
     ++doc_count;
+
+    ++doc_it;
   }
 
-  auto avg_doc_length = total_trigram_count / doc_count;
+  avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
 }
 //---------------------------------------------------------------------------
-std::vector<uint32_t> TrigramIndexEngine::search(const std::string& query) {
-  std::vector<trigramlib::Trigram> trigrams;
+std::vector<DocumentID> TrigramIndexEngine::search(const std::string& query,
+                                                   const scoring::ScoringFunction& score_func) {
+  const char* begin = query.c_str();
+  const char* end = query.c_str() + query.size();
+  trigramlib::TrigramParser parser(begin, end);
 
-  auto parser = trigramlib::TrigramParser(query.c_str(), query.c_str() + query.size());
+  std::unordered_map<DocumentID, double> doc_to_score;
+
+  // Parse the query
   while (parser.hasNext()) {
-    trigrams.push_back(parser.next());
-  }
+    trigramlib::Trigram trigram = parser.next();
 
-  std::unordered_map<uint32_t, uint32_t> result;
+    // Lookup the trigram in the index
+    std::vector<trigramlib::DocFreq>* matches = index.lookup(trigram);
+    if (matches == nullptr) continue;
 
-  for (const auto& trigram : trigrams) {
-    try {
-      auto matches = index.lookup(trigram);
-      for (const auto& match : *matches) {
-        ++result[match.doc_id];
-      }
-    } catch (const std::out_of_range& e) {
-      std::cerr << "Could not find Trigram: " << trigram << std::endl;
+    for (const auto& match : *matches) {
+      doc_to_score[match.doc_id] +=
+          score_func.score({match.doc_id, doc_to_length[match.doc_id]},
+                           {{{match.freq, static_cast<uint32_t>(matches->size())}}});
     }
   }
 
-  std::vector<std::pair<uint32_t, uint32_t>> sorted_result(result.begin(), result.end());
+  // Order by score
+  std::vector<std::pair<DocumentID, double>> sorted_result(doc_to_score.begin(),
+                                                           doc_to_score.end());
   std::sort(sorted_result.begin(), sorted_result.end(),
             [](const auto& a, const auto& b) { return a.second > b.second; });
 
-  uint32_t count = 1;
-  for (const auto& [doc, freq] : sorted_result) {
-    std::cout << "Rank: " << count << std::endl;
-    std::cout << "Document: " << doc << ", Freq: " << freq << std::endl;
-    if (count++ == 10) break;
+  // Extract the top 10
+  std::vector<DocumentID> top_10_results;
+  for (size_t i = 0; i < 10 && i < sorted_result.size(); ++i) {
+    top_10_results.push_back(sorted_result[i].first);
   }
 
-  return std::vector<uint32_t>();
+  return top_10_results;
 }
+//---------------------------------------------------------------------------
+uint32_t TrigramIndexEngine::getDocumentCount() { return doc_count; }
+//---------------------------------------------------------------------------
+double TrigramIndexEngine::getAvgDocumentLength() { return avg_doc_length; }
