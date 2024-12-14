@@ -71,6 +71,7 @@ int main(int argc, char** argv) {
     for (const auto &doc : results) {
       std::cout << doc << std::endl;
     }
+    std::cout << std::endl << std::endl;
   }
 
   return 0;
