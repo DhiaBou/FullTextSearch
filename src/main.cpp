@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   ("d,data", "Pat to the directory containing all data", cxxopts::value<std::string>())
   ("a,algorithm", "Algorithm (inverted/vsm/trigram)", cxxopts::value<std::string>())
   ("s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())
-  ("q,query", "Query (Separated by '_')", cxxopts::value<std::vector<std::string>>())
+  ("q,query", "Query", cxxopts::value<std::vector<std::string>>())
   ("h,help", "Print usage")
   ;
   auto result = options.parse(argc, argv);
@@ -66,12 +66,6 @@ int main(int argc, char** argv) {
   // Search
   auto queries = result["query"].as<std::vector<std::string>>();
   for (auto & query : queries) {
-    for (char &c : query) {
-      if (c == '_') {
-        c = ' ';
-      }
-    }
-
     auto results = engine->search(query, *score_func);
 
     for (const auto &doc : results) {
