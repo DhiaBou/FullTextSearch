@@ -5,9 +5,16 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
+find_package(GTest REQUIRED)
 
-add_executable(fts
-        src/main.cpp
+if(APPLE)
+        set(ARROW_INCLUDE_DIRS /opt/homebrew/include)
+        set(ARROW_LIB_DIRS /opt/homebrew/lib)
+        include_directories(${ARROW_INCLUDE_DIRS})
+        include_directories(${PARQUET_INCLUDE_DIRS})
+endif()
+
+add_library(fts_lib
         src/fts_engine.hpp
         src/documents/document.hpp
         src/documents/document_iterator.cpp
@@ -31,5 +38,9 @@ add_executable(fts
         src/algorithms/inverted/inverted_index_engine.hpp
 )
 
-target_link_libraries(fts PRIVATE arrow_shared parquet_shared)
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)
+add_executable(fts src/main.cpp)
+target_link_libraries(fts PRIVATE fts_lib)
+
+add_subdirectory(test)
 
