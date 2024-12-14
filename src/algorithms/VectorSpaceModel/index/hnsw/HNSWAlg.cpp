@@ -452,6 +452,7 @@ void HierarchicalNSW<dist_t>::getNeighborsByHeuristic2(
         top_candidates.emplace(-curent_pair.first, curent_pair.second);
     }
 }
+
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
 void HierarchicalNSW<dist_t>::updatePoint(const void* dataPoint, tableint internalId,
@@ -950,7 +951,8 @@ void HierarchicalNSW<dist_t>::saveIndex(const std::string& location) {
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
-inline labeltype HierarchicalNSW<dist_t>::getExternalLabel(tableint internal_id) const {
+inline labeltype HierarchicalNSW<dist_t>::getExternalLabel(
+    tableint internal_id) const {
     labeltype return_label;
     memcpy(&return_label,
            (data_level0_memory_ + internal_id * size_data_per_element_ + label_offset_),
@@ -1037,7 +1039,8 @@ void HierarchicalNSW<dist_t>::loadIndex(const std::string& location, SpaceInterf
     input.seekg(cur_element_count * size_data_per_element_, input.cur);
     for (size_t i = 0; i < cur_element_count; i++) {
         if (input.tellg() < 0 || input.tellg() >= total_filesize) {
-            throw std::runtime_error("Index seems to be corrupted or unsupported");
+            throw std::runtime_error(
+                "Index seems to be corrupted or unsupported");
         }
 
         unsigned int linkListSize;
@@ -1061,10 +1064,12 @@ void HierarchicalNSW<dist_t>::loadIndex(const std::string& location, SpaceInterf
     // as many elements
     data_level0_memory_ = (char*)malloc(max_elements * size_data_per_element_);
     if (data_level0_memory_ == nullptr)
-        throw std::runtime_error("Not enough memory: loadIndex failed to allocate level0");
+        throw std::runtime_error(
+            "Not enough memory: loadIndex failed to allocate level0");
     input.read(data_level0_memory_, cur_element_count * size_data_per_element_);
 
-    size_links_per_element_ = maxM_ * sizeof(tableint) + sizeof(linklistsizeint);
+    size_links_per_element_ =
+        maxM_ * sizeof(tableint) + sizeof(linklistsizeint);
 
     size_links_level0_ = maxM0_ * sizeof(tableint) + sizeof(linklistsizeint);
     // move mutexes into the right variables
@@ -1076,7 +1081,8 @@ void HierarchicalNSW<dist_t>::loadIndex(const std::string& location, SpaceInterf
     // Load elements
     linkLists_ = (char**)malloc(sizeof(void*) * max_elements);
     if (linkLists_ == nullptr)
-        throw std::runtime_error("Not enough memory: loadIndex failed to allocate linklists");
+        throw std::runtime_error(
+            "Not enough memory: loadIndex failed to allocate linklists");
     element_levels_ = std::vector<int>(max_elements);
     revSize_ = 1.0 / mult_;
     ef_ = 10;
