@@ -13,6 +13,7 @@
 
 namespace vectorlib {
 //--------------------------------------------------------------------------------------------------
+// TODO: Check if we really need external labels and internal ids? Why not one for both!?
 using labeltype = size_t;
 //--------------------------------------------------------------------------------------------------
 template<typename T>
