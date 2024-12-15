@@ -21,7 +21,7 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
-  double docScoreForToken(uint32_t docId, const Token &token);
+  double docScoreForToken(uint32_t docId, const std::string &token);
 
   double average_doc_length_ = -1.0;
 
