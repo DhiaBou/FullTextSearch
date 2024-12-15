@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
+find_package(GTest REQUIRED)
 find_package(cxxopts REQUIRED)
 find_package(GTest REQUIRED)
 find_package(cxxopts REQUIRED)
@@ -56,3 +57,4 @@ target_link_libraries(fts PRIVATE fts_lib)
 enable_testing()
 
 add_subdirectory(test)
+
