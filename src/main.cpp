@@ -1,5 +1,8 @@
+#include <cxxopts.hpp>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
@@ -9,22 +12,18 @@
 #include "scoring/bm25.hpp"
 #include "scoring/scoring_function.hpp"
 #include "scoring/tf_idf.hpp"
-#include <cxxopts.hpp>
 
 int main(int argc, char** argv) {
-  cxxopts::Options options("Fulltext search", "Multiple implementations of different fulltext search algorithms");
+  cxxopts::Options options("Fulltext search",
+                           "Multiple implementations of different fulltext search algorithms");
 
-  options.add_options()
-  ("d,data", "Pat to the directory containing all data", cxxopts::value<std::string>())
-  ("a,algorithm", "Algorithm (inverted/vsm/trigram)", cxxopts::value<std::string>())
-  ("s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())
-  ("q,query", "Query", cxxopts::value<std::vector<std::string>>())
-  ("h,help", "Print usage")
-  ;
+  options.add_options()("d,data", "Path to the directory containing all data",
+                        cxxopts::value<std::string>())(
+      "a,algorithm", "Algorithm (inverted/vsm/trigram)", cxxopts::value<std::string>())(
+      "s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())("h,help", "Print usage");
   auto result = options.parse(argc, argv);
 
-  if (result.count("data") == 0 || result.count("algorithm") == 0 || result.count("scoring") == 0 ||
-      result.count("query") == 0) {
+  if (result.count("data") == 0 || result.count("algorithm") == 0 || result.count("scoring") == 0) {
     std::cout << options.help() << std::endl;
     return 1;
   }
@@ -63,15 +62,20 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // Search
-  auto queries = result["query"].as<std::vector<std::string>>();
-  for (auto & query : queries) {
+  std::string query;
+  while (true) {
+    std::cout << "Enter query (!q to quit): ";
+    std::getline(std::cin, query);
+
+    if (query == "!q") {
+      break;
+    }
+
     auto results = engine->search(query, *score_func);
 
-    for (const auto &doc : results) {
+    for (const auto& doc : results) {
       std::cout << doc << std::endl;
     }
-    std::cout << std::endl << std::endl;
   }
 
   return 0;

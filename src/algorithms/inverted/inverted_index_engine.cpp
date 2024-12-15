@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "tokenizer/tokenizer.hpp"
+#include "../../tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
   do {
@@ -16,26 +16,23 @@ void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
     auto begin = doc->getData();
     auto end = begin + doc->getSize();
 
-    Tokenizer tokenizer(begin, doc->getSize());
+    tokenizer::StemmingTokenizer tokenizer(begin, doc->getSize());
 
-    while (tokenizer.hasMoreTokens()) {
-      Token token = tokenizer.nextToken();
-
-      if (!token.empty()) {
-        // increment the number of times a token appeared in that document
-        term_frequency_per_document_[token.getString()][doc->getId()]++;
-        // increase the total number of terms in doc d
-        tokens_per_document_[doc->getId()]++;
-      }
+    for (auto token = tokenizer.nextToken(false); !token.empty();
+         token = tokenizer.nextToken(false)) {
+      // increment the number of times a token appeared in that document
+      term_frequency_per_document_[token][doc->getId()]++;
+      // increase the total number of terms in doc d
+      tokens_per_document_[doc->getId()]++;
     }
 
     ++doc_it;
   } while (doc_it.hasNext());
 }
 
-double InvertedIndexEngine::docScoreForToken(uint32_t docId, const Token &token) {
+double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {
   // Ensure token exists in the doc's frequency map, otherwise term frequency is 0.
-  auto docFreqIt = term_frequency_per_document_.find(token.getString());
+  auto docFreqIt = term_frequency_per_document_.find(token);
   if (docFreqIt == term_frequency_per_document_.end()) {
     return 0.0;
   }
@@ -64,27 +61,25 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const Token &token)
 std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query,
                                                     const scoring::ScoringFunction &score_func) {
   // Tokenize the query
-  Tokenizer tokenizer(query.c_str(), query.size());
+  tokenizer::StemmingTokenizer tokenizer(query.c_str(), query.size());
 
   // Map of doc_id -> cumulative score
   std::unordered_map<uint32_t, double> doc_scores;
 
   // Compute scores for each token in the query
-  while (tokenizer.hasMoreTokens()) {
-    Token token = tokenizer.nextToken();
-    if (!token.empty()) {
-      auto it = term_frequency_per_document_.find(token.getString());
-      if (it == term_frequency_per_document_.end()) {
-        // This token doesn't appear in any document
-        continue;
-      }
+  for (auto token = tokenizer.nextToken(false); !token.empty();
+       token = tokenizer.nextToken(false)) {
+    auto it = term_frequency_per_document_.find(token);
+    if (it == term_frequency_per_document_.end()) {
+      // This token doesn't appear in any document
+      continue;
+    }
 
-      // For each document that contains this token, accumulate its score
-      for (const auto &doc_freq : it->second) {
-        uint32_t doc_id = doc_freq.first;
-        double score = docScoreForToken(doc_id, token);
-        doc_scores[doc_id] += score;
-      }
+    // For each document that contains this token, accumulate its score
+    for (const auto &doc_freq : it->second) {
+      uint32_t doc_id = doc_freq.first;
+      double score = docScoreForToken(doc_id, token);
+      doc_scores[doc_id] += score;
     }
   }
 
