@@ -50,7 +50,9 @@ class TrigramParser {
   /// The begin of the trigram the iterator is pointing to.
   const char* trigram_begin;
   /// The trigram produced by the hasNext call.
-  Trigram trigram;
+  char trigram[3];
+  /// The trigram's offset in the word produced by the hasNext call.
+  uint8_t offset;
 };
 //---------------------------------------------------------------------------
 }  // namespace trigramlib
