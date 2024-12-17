@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../VectorSpaceLib.h"
-#include "VisitedList.h"
+#include "../vector_space_lib.hpp"
+#include "visited_list.hpp"
 //--------------------------------------------------------------------------------------------------
 namespace vectorlib {
 //--------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     std::priority_queue<std::pair<dist_t, labeltype>> searchKnn(
         const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const override;
 
-    void saveIndex(const std::string& location);
+    void saveIndex(const std::string& location) override;
 
     void setEf(size_t ef);
 
@@ -142,8 +142,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     static const unsigned char DELETE_MARK = 0x01;
 
     size_t max_elements_{0};
-    mutable std::atomic<size_t> cur_element_count{
-        0};  // current number of elements
+    mutable std::atomic<size_t> cur_element_count{0};  // current number of elements
     size_t size_data_per_element_{0};
     size_t size_links_per_element_{0};
     mutable std::atomic<size_t> num_deleted_{0};  // number of deleted
@@ -194,8 +193,6 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     char* data_level0_memory_{nullptr};
     char** linkLists_{nullptr};
     std::vector<int> element_levels_;  // keeps level of each element
-    std::default_random_engine level_generator_;
-    std::default_random_engine update_probability_generator_;
 
     std::default_random_engine level_generator_;
     std::default_random_engine update_probability_generator_;

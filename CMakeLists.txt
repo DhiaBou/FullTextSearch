@@ -22,13 +22,13 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
-        src/algorithms/vsm/vector_space_model_engine.cpp
-        src/algorithms/vsm/vector_space_model_engine.hpp
-        src/algorithms/vsm/index/hnsw/HNSWAlg.h
-        src/algorithms/vsm/index/VectorSpaceLib.h
-        src/algorithms/vsm/index/hnsw/HNSWAlg.cpp
-        src/algorithms/vsm/index/hnsw/spaces/L2Space.h
-        src/algorithms/vsm/index/hnsw/VisitedList.h
+        src/algorithms/vsm/vector_engine.cpp
+        src/algorithms/vsm/vector_engine.hpp
+        src/algorithms/vsm/index/hnsw/hnsw.hpp
+        src/algorithms/vsm/index/hnsw/hnsw.cpp
+        src/algorithms/vsm/index/hnsw/spaces/l2_space.hpp
+        src/algorithms/vsm/index/hnsw/visited_list.hpp
+        src/algorithms/vsm/index/vector_space_lib.hpp
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c

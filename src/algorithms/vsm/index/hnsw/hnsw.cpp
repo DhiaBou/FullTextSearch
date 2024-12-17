@@ -2,14 +2,13 @@
 // Created by miguel on 05.12.24.
 //
 
-#include "HNSWAlg.h"
+#include "hnsw.hpp"
+#include "../vector_space_lib.hpp"
+#include "visited_list.hpp"
 
 #include <assert.h>
-
 #include <fstream>
 
-#include "../VectorSpaceLib.h"
-#include "VisitedList.h"
 
 // TODO: Have same order of functions in header and source file
 namespace vectorlib {
