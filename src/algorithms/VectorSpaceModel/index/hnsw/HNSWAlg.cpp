@@ -408,6 +408,7 @@ void HierarchicalNSW<dist_t>::repairConnectionsForUpdate(const void* dataPoint,
 }
 //--------------------------------------------------------------------------------------------------
 // TODO: Investigate in Paper why this is done. Maybe to reduce local minima?
+// -> To avoid unconnected clusters
 template <typename dist_t>
 void HierarchicalNSW<dist_t>::getNeighborsByHeuristic2(
     std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
@@ -588,6 +589,13 @@ void HierarchicalNSW<dist_t>::addPoint(const void* data_point, labeltype label,
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
+int HierarchicalNSW<dist_t>::getRandomLevel(double reverse_size) {
+    std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    double r = -log(distribution(level_generator_)) * reverse_size;
+    return (int)r;
+}
+//--------------------------------------------------------------------------------------------------
+template <typename dist_t>
 tableint HierarchicalNSW<dist_t>::addPoint(const void* data_point, labeltype label, int level) {
     tableint cur_c = 0;
     {
@@ -727,23 +735,218 @@ void HierarchicalNSW<dist_t>::unmarkDeletedInternal(tableint internalId) {
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
-std::priority_queue<std::pair<dist_t, labeltype>> HierarchicalNSW<dist_t>::searchKnn(
-    const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed) const {
-    // TODO
+template <bool bare_bone_search, bool collect_metrics>
+std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                    typename HierarchicalNSW<dist_t>::CompareByFirst>
+HierarchicalNSW<dist_t>::searchBaseLayerST(tableint ep_id, const void* data_point, size_t ef,
+                                           BaseFilterFunctor* isIdAllowed,
+                                           BaseSearchStopCondition<dist_t>* stop_condition) const {
+    VisitedList* vl = visited_list_pool_->getFreeVisitedList();
+    vl_type* visited_array = vl->mass;
+    vl_type visited_array_tag = vl->curV;
 
-    return std::priority_queue<std::pair<dist_t, labeltype>>();
+    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                        CompareByFirst>
+        top_candidates;
+    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                        CompareByFirst>
+        candidate_set;
+
+    dist_t lowerBound;
+    if (bare_bone_search ||
+        (!isMarkedDeleted(ep_id) && ((!isIdAllowed) || (*isIdAllowed)(getExternalLabel(ep_id))))) {
+        char* ep_data = getDataByInternalId(ep_id);
+        dist_t dist = fstdistfunc_(data_point, ep_data, dist_func_param_);
+        lowerBound = dist;
+        top_candidates.emplace(dist, ep_id);
+        if (!bare_bone_search && stop_condition) {
+            stop_condition->add_point_to_result(getExternalLabel(ep_id), ep_data, dist);
+        }
+        candidate_set.emplace(-dist, ep_id);
+    } else {
+        lowerBound = std::numeric_limits<dist_t>::max();
+        candidate_set.emplace(-lowerBound, ep_id);
+    }
+
+    visited_array[ep_id] = visited_array_tag;
+
+    while (!candidate_set.empty()) {
+        std::pair<dist_t, tableint> current_node_pair = candidate_set.top();
+        dist_t candidate_dist = -current_node_pair.first;
+
+        bool flag_stop_search;
+        if (bare_bone_search) {
+            flag_stop_search = candidate_dist > lowerBound;
+        } else {
+            if (stop_condition) {
+                flag_stop_search = stop_condition->should_stop_search(candidate_dist, lowerBound);
+            } else {
+                flag_stop_search = candidate_dist > lowerBound && top_candidates.size() == ef;
+            }
+        }
+        if (flag_stop_search) {
+            break;
+        }
+        candidate_set.pop();
+
+        tableint current_node_id = current_node_pair.second;
+        int* data = (int*)get_linklist0(current_node_id);
+        size_t size = getListCount((linklistsizeint*)data);
+        //                bool cur_node_deleted = isMarkedDeleted(current_node_id);
+        if (collect_metrics) {
+            metric_hops++;
+            metric_distance_computations += size;
+        }
+
+        for (size_t j = 1; j <= size; j++) {
+            int candidate_id = *(data + j);
+            //                    if (candidate_id == 0) continue;
+
+            if (!(visited_array[candidate_id] == visited_array_tag)) {
+                visited_array[candidate_id] = visited_array_tag;
+
+                char* currObj1 = (getDataByInternalId(candidate_id));
+                dist_t dist = fstdistfunc_(data_point, currObj1, dist_func_param_);
+
+                bool flag_consider_candidate;
+                if (!bare_bone_search && stop_condition) {
+                    flag_consider_candidate =
+                        stop_condition->should_consider_candidate(dist, lowerBound);
+                } else {
+                    flag_consider_candidate = top_candidates.size() < ef || lowerBound > dist;
+                }
+
+                if (flag_consider_candidate) {
+                    candidate_set.emplace(-dist, candidate_id);
+                    if (bare_bone_search ||
+                        (!isMarkedDeleted(candidate_id) &&
+                         ((!isIdAllowed) || (*isIdAllowed)(getExternalLabel(candidate_id))))) {
+                        top_candidates.emplace(dist, candidate_id);
+                        if (!bare_bone_search && stop_condition) {
+                            stop_condition->add_point_to_result(getExternalLabel(candidate_id),
+                                                                currObj1, dist);
+                        }
+                    }
+
+                    bool flag_remove_extra = false;
+                    if (!bare_bone_search && stop_condition) {
+                        flag_remove_extra = stop_condition->should_remove_extra();
+                    } else {
+                        flag_remove_extra = top_candidates.size() > ef;
+                    }
+                    while (flag_remove_extra) {
+                        tableint id = top_candidates.top().second;
+                        top_candidates.pop();
+                        if (!bare_bone_search && stop_condition) {
+                            stop_condition->remove_point_from_result(getExternalLabel(id),
+                                                                     getDataByInternalId(id), dist);
+                            flag_remove_extra = stop_condition->should_remove_extra();
+                        } else {
+                            flag_remove_extra = top_candidates.size() > ef;
+                        }
+                    }
+
+                    if (!top_candidates.empty()) lowerBound = top_candidates.top().first;
+                }
+            }
+        }
+    }
+
+    visited_list_pool_->releaseVisitedList(vl);
+    return top_candidates;
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
-std::vector<std::pair<dist_t, labeltype>> HierarchicalNSW<dist_t>::searchKnnCloserFirst(
-    const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed) const {
-    // TODO
-    return std::vector<std::pair<dist_t, labeltype>>();
+std::priority_queue<std::pair<dist_t, labeltype>> HierarchicalNSW<dist_t>::searchKnn(
+    const void* query_data, size_t k, BaseFilterFunctor* isIdAllowed) const {
+    std::priority_queue<std::pair<dist_t, labeltype>> result;
+    if (cur_element_count == 0) return result;
+
+    tableint currObj = enterpoint_node_;
+    dist_t curdist =
+        fstdistfunc_(query_data, getDataByInternalId(enterpoint_node_), dist_func_param_);
+
+    // search in upper levels
+    for (int level = maxlevel_; level > 0; level--) {
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            unsigned int* data;
+
+            data = (unsigned int*)get_linklist(currObj, level);
+            int size = getListCount(data);
+            metric_hops++;
+            metric_distance_computations += size;
+
+            // find the closest candidate among the neighbors
+            tableint* datal = (tableint*)(data + 1);
+            for (int i = 0; i < size; i++) {
+                tableint cand = datal[i];
+                if (cand < 0 || cand > max_elements_) throw std::runtime_error("cand error");
+                dist_t d = fstdistfunc_(query_data, getDataByInternalId(cand), dist_func_param_);
+
+                if (d < curdist) {
+                    curdist = d;
+                    currObj = cand;
+                    changed = true;
+                }
+            }
+        }
+    }
+
+    // level 0 search
+    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                        CompareByFirst>
+        top_candidates;
+    bool bare_bone_search = !num_deleted_ && !isIdAllowed;
+    if (bare_bone_search) {
+        top_candidates =
+            searchBaseLayerST<true>(currObj, query_data, std::max(ef_, k), isIdAllowed);
+    } else {
+        top_candidates =
+            searchBaseLayerST<false>(currObj, query_data, std::max(ef_, k), isIdAllowed);
+    }
+
+    while (top_candidates.size() > k) {
+        top_candidates.pop();
+    }
+    while (top_candidates.size() > 0) {
+        std::pair<dist_t, tableint> rez = top_candidates.top();
+        result.push(std::pair<dist_t, labeltype>(rez.first, getExternalLabel(rez.second)));
+        top_candidates.pop();
+    }
+    return result;
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
 void HierarchicalNSW<dist_t>::saveIndex(const std::string& location) {
-    // TODO
+    std::ofstream output(location, std::ios::binary);
+    std::streampos position;
+
+    writeBinaryPOD(output, offsetLevel0_);
+    writeBinaryPOD(output, max_elements_);
+    writeBinaryPOD(output, cur_element_count);
+    writeBinaryPOD(output, size_data_per_element_);
+    writeBinaryPOD(output, label_offset_);
+    writeBinaryPOD(output, offsetData_);
+    writeBinaryPOD(output, maxlevel_);
+    writeBinaryPOD(output, enterpoint_node_);
+    writeBinaryPOD(output, maxM_);
+
+    writeBinaryPOD(output, maxM0_);
+    writeBinaryPOD(output, M_);
+    writeBinaryPOD(output, mult_);
+    writeBinaryPOD(output, ef_construction_);
+
+    output.write(data_level0_memory_, cur_element_count * size_data_per_element_);
+
+    for (size_t i = 0; i < cur_element_count; i++) {
+        unsigned int linkListSize =
+            element_levels_[i] > 0 ? size_links_per_element_ * element_levels_[i] : 0;
+        writeBinaryPOD(output, linkListSize);
+        if (linkListSize) output.write(linkLists_[i], linkListSize);
+    }
+    output.close();
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
@@ -781,7 +984,7 @@ linklistsizeint* HierarchicalNSW<dist_t>::get_linklist0(tableint internal_id) co
 }
 //--------------------------------------------------------------------------------------------------
 template <typename dist_t>
-bool HierarchicalNSW<dist_t>::isMarkedDeleted(vectorlib::hnsw::tableint internalId) {
+bool HierarchicalNSW<dist_t>::isMarkedDeleted(vectorlib::hnsw::tableint internalId) const {
     unsigned char* ll_cur = ((unsigned char*)get_linklist0(internalId)) + 2;
     return *ll_cur & DELETE_MARK;
 }
