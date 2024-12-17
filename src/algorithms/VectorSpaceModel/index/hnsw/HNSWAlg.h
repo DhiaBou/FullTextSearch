@@ -26,7 +26,9 @@ template <typename dist_t>
 class HierarchicalNSW : public AlgorithmInterface<dist_t> {
    public:
     // Constructors
-    // HierarchicalNSW(SpaceInterface<dist_t> *s) {}
+
+    // Default Constructor
+    HierarchicalNSW(SpaceInterface<dist_t>* s) {};
 
     HierarchicalNSW(SpaceInterface<dist_t>* s, const std::string& location,
                     // bool nmslib = false,
@@ -43,13 +45,10 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
      */
     void addPoint(const void* data_point, labeltype label, bool replace_deleted = false) override;
 
-    tableint addPoint(const void *data_point, labeltype label, int level);
+    tableint addPoint(const void* data_point, labeltype label, int level);
 
     std::priority_queue<std::pair<dist_t, labeltype>> searchKnn(
         const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const override;
-
-    virtual std::vector<std::pair<dist_t, labeltype>> searchKnnCloserFirst(
-        const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const;
 
     void saveIndex(const std::string& location);
 
@@ -65,6 +64,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     };
 
    private:
+    int getRandomLevel(double reverse_size);
+
     void loadIndex(const std::string& location, SpaceInterface<dist_t>* s,
                    size_t max_elements_i = 0);
 
@@ -80,15 +81,24 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     void repairConnectionsForUpdate(const void* dataPoint, tableint entryPointInternalId,
                                     tableint dataPointInternalId, int dataPointLevel, int maxLevel);
 
-    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>, CompareByFirst>
-    searchBaseLayer(tableint ep_id, const void *data_point, int layer);
+    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                        CompareByFirst>
+    searchBaseLayer(tableint ep_id, const void* data_point, int layer);
+
+    // bare_bone_search means there is no check for deletions and stop condition is ignored in
+    // return of extra performance
+    template <bool bare_bone_search = true, bool collect_metrics = false>
+    std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                        CompareByFirst>
+    searchBaseLayerST(tableint ep_id, const void* data_point, size_t ef,
+                      BaseFilterFunctor* isIdAllowed = nullptr,
+                      BaseSearchStopCondition<dist_t>* stop_condition = nullptr) const;
 
     tableint mutuallyConnectNewElement(
-        const void *data_point,
-        tableint cur_c,
-        std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>, CompareByFirst> &top_candidates,
-        int level,
-        bool isUpdate);
+        const void* data_point, tableint cur_c,
+        std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>,
+                            CompareByFirst>& top_candidates,
+        int level, bool isUpdate);
 
     labeltype getExternalLabel(tableint internal_id) const;
 
@@ -97,7 +107,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     /*
      * Checks the first 16 bits of the memory to see if the element is marked deleted.
      */
-    bool isMarkedDeleted(tableint internalId);
+    bool isMarkedDeleted(tableint internalId) const;
 
     /*
      * Remove the deleted mark of the node.
@@ -159,6 +169,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     mutable std::vector<std::mutex> label_op_locks_;
     std::vector<std::mutex> link_list_locks_;
 
+    std::mutex global;
+
     size_t data_size_{0};
     DISTFUNC<dist_t> fstdistfunc_;
     void* dist_func_param_{nullptr};
@@ -181,8 +193,12 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     char* data_level0_memory_{nullptr};
     char** linkLists_{nullptr};
     std::vector<int> element_levels_;  // keeps level of each element
+
     std::default_random_engine level_generator_;
     std::default_random_engine update_probability_generator_;
+
+    mutable std::atomic<long> metric_distance_computations{0};
+    mutable std::atomic<long> metric_hops{0};
 };
 //--------------------------------------------------------------------------------------------------
 }  // namespace hnsw
