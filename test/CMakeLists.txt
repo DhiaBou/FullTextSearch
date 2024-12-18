@@ -1,5 +1,6 @@
 set(TEST_SOURCES
         tokenizer/stemmingtokenizer_tests.cpp
+        vector/hnsw_tests.cpp
 )
 
 add_executable(fts_tests ${TEST_SOURCES})
