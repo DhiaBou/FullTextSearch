@@ -67,7 +67,6 @@ bool DocumentIterator::loadNextBatch() {
 }
 
 bool DocumentIterator::hasNext() {
-  if (current_row_index > 5) return false;
   while (true) {
     if (!current_batch) {
       return false;
