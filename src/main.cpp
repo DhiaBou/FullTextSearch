@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
     sfe = scoring::ScoringFunctionEnum::BM25;
   } else if (scoring_choice == "tf-idf") {
     sfe = scoring::ScoringFunctionEnum::TFIDF;
-  } else {
+  }
+  else {
     std::cout << options.help() << std::endl;
     return 1;
   }

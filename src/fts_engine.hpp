@@ -65,7 +65,7 @@ class FullTextSearchEngine {
   virtual double getAvgDocumentLength() = 0;
 
  protected:
-  void initialize_scoring_func() {
+  void initScoringFunction() {
     switch (sfe_) {
       case scoring::ScoringFunctionEnum::BM25: {
         double k1 = 1.5;

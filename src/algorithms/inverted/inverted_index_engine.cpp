@@ -28,7 +28,7 @@ void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
 
     ++doc_it;
   } while (doc_it.hasNext());
-  initialize_scoring_func();
+  initScoringFunction();
 }
 
 double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {
