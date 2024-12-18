@@ -36,13 +36,11 @@ int main(int argc, char** argv) {
   scoring::ScoringFunctionEnum sfe;
   if (scoring_choice == "bm25") {
     sfe = scoring::ScoringFunctionEnum::BM25;
-  }
-  else if (scoring_choice == "tf-idf") {
+  } else if (scoring_choice == "tf-idf") {
     sfe = scoring::ScoringFunctionEnum::TFIDF;
-  }
-  else {
-        std::cout << options.help() << std::endl;
-      return 1;
+  } else {
+    std::cout << options.help() << std::endl;
+    return 1;
   }
 
   auto algorithm_choice = result["algorithm"].as<std::string>();
@@ -58,23 +56,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  // Scoring
-  std::unique_ptr<scoring::ScoringFunction> score_func;
-  if (scoring_choice == "bm25") {
-    double k1 = 1.5;
-    double b = 0.75;
-    score_func = std::make_unique<scoring::BM25>(engine->getDocumentCount(),
-                                                 engine->getAvgDocumentLength(), k1, b);
-  } else if (scoring_choice == "tf-idf") {
-    score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
-  } else {
-    std::cout << options.help() << std::endl;
-    return 1;
-  }
-
   // Build the index
   engine->indexDocuments(std::move(it));
-
 
   std::string query;
   while (true) {
@@ -85,7 +68,7 @@ int main(int argc, char** argv) {
       break;
     }
 
-    auto results = engine->search(query, *score_func);
+    auto results = engine->search(query);
 
     for (const auto& doc : results) {
       std::cout << doc << std::endl;

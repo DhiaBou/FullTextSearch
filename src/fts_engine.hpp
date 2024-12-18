@@ -7,7 +7,9 @@
 
 #include "documents/document.hpp"
 #include "documents/document_iterator.hpp"
+#include "scoring/bm25.hpp"
 #include "scoring/scoring_function.hpp"
+#include "scoring/tf_idf.hpp"
 
 using DocumentID = uint32_t;
 
@@ -21,8 +23,7 @@ using DocumentID = uint32_t;
  */
 class FullTextSearchEngine {
  public:
-
-   /**
+  /**
    * Constructor.
    */
   FullTextSearchEngine(scoring::ScoringFunctionEnum sfe) : sfe_(sfe) {}
@@ -49,8 +50,7 @@ class FullTextSearchEngine {
    * @param query The search query as a string.
    * @return A vector of document IDs that match the query.
    */
-  virtual std::vector<DocumentID> search(const std::string &query,
-                                         const scoring::ScoringFunction &score_func) = 0;
+  virtual std::vector<DocumentID> search(const std::string &query) = 0;
   /**
    * @brief Gets the number of indexed documents.
    *
@@ -64,8 +64,26 @@ class FullTextSearchEngine {
    */
   virtual double getAvgDocumentLength() = 0;
 
-private:
+ protected:
+  void initialize_scoring_func() {
+    switch (sfe_) {
+      case scoring::ScoringFunctionEnum::BM25: {
+        double k1 = 1.5;
+        double b = 0.75;
+        score_func =
+            std::make_unique<scoring::BM25>(getDocumentCount(), getAvgDocumentLength(), k1, b);
+        break;
+      }
+      case scoring::ScoringFunctionEnum::TFIDF: {
+        score_func = std::make_unique<scoring::TfIdf>(getDocumentCount());
+        break;
+      }
+    }
+  }
+
+ private:
   scoring::ScoringFunctionEnum sfe_;
+  std::unique_ptr<scoring::ScoringFunction> score_func;
 };
 
 #endif  // FTS_ENGINE_HPP

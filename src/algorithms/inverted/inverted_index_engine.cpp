@@ -28,6 +28,7 @@ void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
 
     ++doc_it;
   } while (doc_it.hasNext());
+  initialize_scoring_func();
 }
 
 double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {
@@ -58,8 +59,7 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &
 
   return termFrequency * idf;
 }
-std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query,
-                                                    const scoring::ScoringFunction &score_func) {
+std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query) {
   // Tokenize the query
   tokenizer::StemmingTokenizer tokenizer(query.c_str(), query.size());
 
