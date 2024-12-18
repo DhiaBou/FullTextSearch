@@ -60,10 +60,6 @@ void VectorSpaceModelEngine::indexDocuments(DocumentIterator doc_it) {
         }
     }
 
-    if (scoring function == TFIDF) {
-        
-    }
-
     // Sort global tokens
     sortedTokens_.assign(globalTokens.begin(), globalTokens.end());
     std::sort(sortedTokens_.begin(), sortedTokens_.end());

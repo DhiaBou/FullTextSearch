@@ -11,6 +11,9 @@ struct Token;
 
 class InvertedIndexEngine : public FullTextSearchEngine {
  public:
+
+  InvertedIndexEngine(scoring::ScoringFunctionEnum sfe): FullTextSearchEngine(sfe) {};
+
   void indexDocuments(DocumentIterator it) override;
 
   std::vector<DocumentID> search(const std::string &query,

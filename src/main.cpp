@@ -31,14 +31,28 @@ int main(int argc, char** argv) {
   auto directory_path = result["data"].as<std::string>();
   DocumentIterator it(directory_path);
 
+  // Scoring
+  auto scoring_choice = result["scoring"].as<std::string>();
+  scoring::ScoringFunctionEnum sfe;
+  if (scoring_choice == "bm25") {
+    sfe = scoring::ScoringFunctionEnum::BM25;
+  }
+  else if (scoring_choice == "tf-idf") {
+    sfe = scoring::ScoringFunctionEnum::TFIDF;
+  }
+  else {
+        std::cout << options.help() << std::endl;
+      return 1;
+  }
+
   auto algorithm_choice = result["algorithm"].as<std::string>();
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
-    engine = std::make_unique<vectorlib::VectorSpaceModelEngine>();
+    engine = std::make_unique<vectorlib::VectorSpaceModelEngine>(sfe);
   } else if (algorithm_choice == "inverted") {
-    engine = std::make_unique<InvertedIndexEngine>();
+    engine = std::make_unique<InvertedIndexEngine>(sfe);
   } else if (algorithm_choice == "trigram") {
-    engine = std::make_unique<TrigramIndexEngine>();
+    engine = std::make_unique<TrigramIndexEngine>(sfe);
   } else {
     std::cout << options.help() << std::endl;
     return 1;
@@ -46,7 +60,6 @@ int main(int argc, char** argv) {
 
   // Scoring
   std::unique_ptr<scoring::ScoringFunction> score_func;
-  auto scoring_choice = result["scoring"].as<std::string>();
   if (scoring_choice == "bm25") {
     double k1 = 1.5;
     double b = 0.75;
@@ -62,25 +75,6 @@ int main(int argc, char** argv) {
   // Build the index
   engine->indexDocuments(std::move(it));
 
-  // Scoring
-  std::unique_ptr<scoring::ScoringFunction> score_func;
-  std::string scoring_choice;
-
-  do {
-    std::cout << "Select the function to score documents (bm25/tf-idf): ";
-    std::getline(std::cin, scoring_choice);
-    if (scoring_choice == "bm25") {
-      double k1 = 1.5;
-      double b = 0.75;
-      score_func = std::make_unique<scoring::BM25>(engine->getDocumentCount(),
-                                                   engine->getAvgDocumentLength(), k1, b);
-    } else if (scoring_choice == "tf-idf") {
-      score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
-    } else {
-      std::cout << "Invalid choice!" << std::endl;
-    }
-  } while (score_func == nullptr);
-
 
   std::string query;
   while (true) {
@@ -91,7 +85,6 @@ int main(int argc, char** argv) {
       break;
     }
 
-    auto results = engine->search(query, *score_func);
     auto results = engine->search(query, *score_func);
 
     for (const auto& doc : results) {
