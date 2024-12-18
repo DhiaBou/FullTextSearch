@@ -51,10 +51,8 @@ int main(int argc, char** argv) {
   std::unique_ptr<scoring::ScoringFunction> score_func;
   auto scoring_choice = result["scoring"].as<std::string>();
   if (scoring_choice == "bm25") {
-    double k1 = 1.5;
-    double b = 0.75;
-    score_func = std::make_unique<scoring::BM25>(engine->getDocumentCount(),
-                                                 engine->getAvgDocumentLength(), k1, b);
+    score_func =
+        std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
   } else if (scoring_choice == "tf-idf") {
     score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
   } else {

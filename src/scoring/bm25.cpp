@@ -2,6 +2,9 @@
 //---------------------------------------------------------------------------
 namespace scoring {
 //---------------------------------------------------------------------------
+BM25::BM25(uint32_t doc_count, double avg_doc_length)
+    : doc_count(doc_count), avg_doc_length(avg_doc_length), k1(1.5), b(0.75) {}
+//---------------------------------------------------------------------------
 BM25::BM25(uint32_t doc_count, double avg_doc_length, double k1, double b)
     : doc_count(doc_count), avg_doc_length(avg_doc_length), k1(k1), b(b) {}
 //---------------------------------------------------------------------------
