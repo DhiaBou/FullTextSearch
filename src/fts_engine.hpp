@@ -21,6 +21,12 @@ using DocumentID = uint32_t;
  */
 class FullTextSearchEngine {
  public:
+
+   /**
+   * Constructor.
+   */
+  FullTextSearchEngine(scoring::ScoringFunctionEnum sfe) : sfe_(sfe) {}
+
   /**
    * Destructor.
    */
@@ -57,6 +63,9 @@ class FullTextSearchEngine {
    * @return The indexed documents' average length.
    */
   virtual double getAvgDocumentLength() = 0;
+
+private:
+  scoring::ScoringFunctionEnum sfe_;
 };
 
 #endif  // FTS_ENGINE_HPP

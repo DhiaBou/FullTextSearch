@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   auto algorithm_choice = result["algorithm"].as<std::string>();
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
-    engine = std::make_unique<VectorSpaceModelEngine>();
+    engine = std::make_unique<vectorlib::VectorSpaceModelEngine>();
   } else if (algorithm_choice == "inverted") {
     engine = std::make_unique<InvertedIndexEngine>();
   } else if (algorithm_choice == "trigram") {
@@ -43,9 +43,6 @@ int main(int argc, char** argv) {
     std::cout << options.help() << std::endl;
     return 1;
   }
-
-  // Build the index
-  engine->indexDocuments(std::move(it));
 
   // Scoring
   std::unique_ptr<scoring::ScoringFunction> score_func;
@@ -61,6 +58,10 @@ int main(int argc, char** argv) {
     std::cout << options.help() << std::endl;
     return 1;
   }
+
+  // Build the index
+  engine->indexDocuments(std::move(it));
+
 
   std::string query;
   while (true) {
