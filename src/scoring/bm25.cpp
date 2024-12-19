@@ -15,4 +15,11 @@ double BM25::score(const DocStats& doc_stats, const WordStats& word_stats) const
            (k1 * (1.0 - b + b * (static_cast<double>(doc_stats.doc_length) / avg_doc_length)))));
 }
 //---------------------------------------------------------------------------
+double BM25::score(const DocStats& doc_stats, const WordStats& word_stats, double idf) const {
+  return idf *
+         ((static_cast<double>(word_stats.frequency) * (k1 + 1.0)) /
+          (static_cast<double>(word_stats.frequency) +
+           (k1 * (1.0 - b + b * (static_cast<double>(doc_stats.doc_length) / avg_doc_length)))));
+}
+//---------------------------------------------------------------------------
 }  // namespace scoring

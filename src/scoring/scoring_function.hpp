@@ -3,7 +3,6 @@
 //---------------------------------------------------------------------------
 #include <cmath>
 #include <cstdint>
-#include <vector>
 //---------------------------------------------------------------------------
 namespace scoring {
 //---------------------------------------------------------------------------
@@ -41,6 +40,9 @@ class ScoringFunction {
    */
   [[nodiscard]] virtual double score(const DocStats& doc_stats,
                                      const WordStats& word_stats) const = 0;
+
+  [[nodiscard]] virtual double score(const DocStats& doc_stats,
+                                     const WordStats& word_stats, double idf) const = 0;
 };
 //---------------------------------------------------------------------------
 /**

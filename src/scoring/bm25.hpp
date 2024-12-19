@@ -13,6 +13,8 @@ class BM25 : public ScoringFunction {
   BM25(uint32_t doc_count, double avg_doc_length, double k1, double b);
   /// Calculates the BM25 score for a given document and word.
   double score(const DocStats& doc_stats, const WordStats& word_stats) const override;
+  /// Calculates the tf-idf score for a given document, word and idf.
+  double score(const DocStats& doc_stats, const WordStats& word_stats, double idf) const override;
 
  private:
   /// The total number of documents.

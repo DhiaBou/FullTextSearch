@@ -11,6 +11,8 @@ class TfIdf : public ScoringFunction {
   explicit TfIdf(uint32_t doc_count);
   /// Calculates the tf-idf score for a given document and word.
   double score(const DocStats& doc_stats, const WordStats& word_stats) const override;
+  /// Calculates the tf-idf score for a given document, word and idf.
+  double score(const DocStats& doc_stats, const WordStats& word_stats, double idf) const override;
 
  private:
   /// The total number of documents.
