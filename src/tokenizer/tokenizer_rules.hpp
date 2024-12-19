@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_set>
 namespace tokenizer {
-static const char DELIM_CHARS[] = " \t\n\r.,;:!()[]{}<>?\"'~@#$%^&*-_=+|\\";
+static const char DELIM_CHARS[] = " \t\n\r.,;:!()[]{}<>?/\"'~@#$%^&*-_=+|\\";
 static const std::unordered_set<std::string> STOP_WORDS = {
     "i",       "me",      "my",      "myself",   "we",         "our",    "ours",    "ourselves",
     "you",     "your",    "yours",   "yourself", "yourselves", "he",     "him",     "his",
