@@ -41,10 +41,12 @@ class FullTextSearchEngine {
    * and returns a list of matching document IDs.
    *
    * @param query The search query as a string.
-   * @return A vector of document IDs that match the query.
+   * @param num_results Number of shown results.
+   * @return A vector of document IDs that match the query and their scores.
    */
-  virtual std::vector<DocumentID> search(const std::string &query,
-                                         const scoring::ScoringFunction &score_func) = 0;
+  virtual std::vector<std::pair<DocumentID, double>> search(
+      const std::string &query, const scoring::ScoringFunction &score_func,
+      uint32_t num_results) = 0;
   /**
    * @brief Gets the number of indexed documents.
    *
