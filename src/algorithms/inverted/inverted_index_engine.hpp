@@ -13,8 +13,9 @@ class InvertedIndexEngine : public FullTextSearchEngine {
  public:
   void indexDocuments(DocumentIterator it) override;
 
-  std::vector<DocumentID> search(const std::string &query,
-                                 const scoring::ScoringFunction &score_func) override;
+  std::vector<std::pair<DocumentID, double>> search(const std::string &query,
+                                                    const scoring::ScoringFunction &score_func,
+                                                    uint32_t num_results) override;
 
   uint32_t getDocumentCount() override;
 
@@ -26,7 +27,7 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double average_doc_length_ = -1.0;
 
   /// key is token, value is a map of doc id to term frequency
-  std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t> >
+  std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t>>
       term_frequency_per_document_;
 
   /// key is document id, value is number of tokens or terms

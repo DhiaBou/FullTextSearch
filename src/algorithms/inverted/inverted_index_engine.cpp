@@ -5,7 +5,6 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include <stdexcept>
 #include <string>
 
 #include "../../tokenizer/stemmingtokenizer.hpp"
@@ -58,8 +57,8 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &
 
   return termFrequency * idf;
 }
-std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query,
-                                                    const scoring::ScoringFunction &score_func) {
+std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
+    const std::string &query, const scoring::ScoringFunction &score_func, uint32_t num_results) {
   // Tokenize the query
   tokenizer::StemmingTokenizer tokenizer(query.c_str(), query.size());
 
@@ -92,7 +91,7 @@ std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query,
     const double &score = entry.second;
     const uint32_t &doc_id = entry.first;
 
-    if (results.size() < 10) {
+    if (results.size() < num_results) {
       results.emplace(score, doc_id);
     } else if (score > results.top().first) {
       results.pop();
@@ -101,9 +100,9 @@ std::vector<DocumentID> InvertedIndexEngine::search(const std::string &query,
   }
 
   // Extract top documents in descending order of score
-  std::vector<uint32_t> top_documents(results.size());
+  std::vector<std::pair<DocumentID, double>> top_documents{results.size()};
   for (int i = static_cast<int>(results.size()) - 1; i >= 0; i--) {
-    top_documents[i] = static_cast<uint32_t>(results.top().second);
+    top_documents[i] = {static_cast<uint32_t>(results.top().second), results.top().first};
     results.pop();
   }
 
