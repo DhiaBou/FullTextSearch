@@ -40,9 +40,18 @@ class ScoringFunction {
    */
   [[nodiscard]] virtual double score(const DocStats& doc_stats,
                                      const WordStats& word_stats) const = 0;
-
-  [[nodiscard]] virtual double score(const DocStats& doc_stats,
-                                     const WordStats& word_stats, double idf) const = 0;
+  /**
+   * Calculates a score for a given document, word and idf.
+   *
+   * This overload allows to reuse the inverse document frequency
+   * for performance optimization.
+   *
+   * @param doc_stats The statistics for the document.
+   * @param query_stats The statistics for the word.
+   * @return The calculated score for the document and word.
+   */
+  [[nodiscard]] virtual double score(const DocStats& doc_stats, const WordStats& word_stats,
+                                     double idf) const = 0;
 };
 //---------------------------------------------------------------------------
 /**

@@ -10,8 +10,8 @@ double TfIdf::score(const DocStats& doc_stats, const WordStats& word_stats) cons
 }
 //---------------------------------------------------------------------------
 double TfIdf::score(const DocStats& doc_stats, const WordStats& word_stats, double idf) const {
-  return (static_cast<double>(word_stats.frequency) / static_cast<double>(doc_stats.doc_length)) * 
-  idf;
+  return (static_cast<double>(word_stats.frequency) / static_cast<double>(doc_stats.doc_length)) *
+         idf;
 }
 //---------------------------------------------------------------------------
 }  // namespace scoring
