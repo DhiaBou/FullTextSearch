@@ -8,6 +8,13 @@ find_package(Parquet REQUIRED)
 find_package(GTest REQUIRED)
 find_package(cxxopts REQUIRED)
 
+if(APPLE)
+        set(ARROW_INCLUDE_DIRS /opt/homebrew/include)
+        set(ARROW_LIB_DIRS /opt/homebrew/lib)
+        include_directories(${ARROW_INCLUDE_DIRS})
+        include_directories(${PARQUET_INCLUDE_DIRS})
+endif()
+
 add_library(fts_lib
         src/fts_engine.hpp
         src/documents/document.hpp
@@ -38,10 +45,7 @@ add_library(fts_lib
         src/tokenizer/tokenizer_rules.hpp
 )
 
-set(OBJECT_FILES
-)
-
-target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared ${OBJECT_FILES})
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)
 
 add_executable(fts src/main.cpp)
 target_link_libraries(fts PRIVATE fts_lib)

@@ -3,34 +3,23 @@
 //---------------------------------------------------------------------------
 #include <cmath>
 #include <cstdint>
-#include <vector>
 //---------------------------------------------------------------------------
 namespace scoring {
 //---------------------------------------------------------------------------
 /**
- * Wraps statistics for a query word.
+ * Wraps statistics for a word.
  */
-struct QueryWordStats {
-  /// The number of times the query word appears in the document.
+struct WordStats {
+  /// The number of times the word appears in the document.
   uint32_t frequency;
-  /// The number of documents the query word appears in.
+  /// The number of documents the word appears in.
   uint32_t total_count;
-};
-//---------------------------------------------------------------------------
-/**
- * Wraps statistics for a query.
- */
-struct QueryStats {
-  /// Statistics for each word in the query.
-  std::vector<QueryWordStats> query_words;
 };
 //---------------------------------------------------------------------------
 /**
  * Wraps statistics for a document.
  */
 struct DocStats {
-  /// The associated document's ID.
-  uint32_t doc_id;
   /// The associated document's length in words.
   uint32_t doc_length;
 };
@@ -43,14 +32,27 @@ class ScoringFunction {
   /// Destructor.
   virtual ~ScoringFunction() = default;
   /**
-   * Calculates a score for a given document and query.
+   * Calculates a score for a given document and word.
    *
    * @param doc_stats The statistics for the document.
-   * @param query_stats The statistics for the query.
-   * @return The calculated score for the document and query.
+   * @param query_stats The statistics for the word.
+   * @return The calculated score for the document and word.
    */
   [[nodiscard]] virtual double score(const DocStats& doc_stats,
-                                     const QueryStats& query_stats) const = 0;
+                                     const WordStats& word_stats) const = 0;
+  /**
+   * Calculates a score for a given document, word and idf.
+   *
+   * This overload allows to reuse the inverse document frequency
+   * for performance optimization.
+   *
+   * @param doc_stats The statistics for the document.
+   * @param query_stats The statistics for the word.
+   * @param idf The idf value.
+   * @return The calculated score for the document and word.
+   */
+  [[nodiscard]] virtual double score(const DocStats& doc_stats, const WordStats& word_stats,
+                                     double idf) const = 0;
 };
 //---------------------------------------------------------------------------
 /**
@@ -61,7 +63,9 @@ class ScoringFunction {
  * @return The IDF value.
  */
 inline double idf(uint32_t doc_count, uint32_t doc_frequency) {
-  return std::log((doc_count - doc_frequency + 0.5) / (doc_frequency + 0.5) + 1);
+  return std::log((static_cast<double>(doc_count) - static_cast<double>(doc_frequency) + 0.5) /
+                      (static_cast<double>(doc_frequency) + 0.5) +
+                  1.0);
 }
 //---------------------------------------------------------------------------
 }  // namespace scoring

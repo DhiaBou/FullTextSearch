@@ -4,13 +4,14 @@ namespace scoring {
 //---------------------------------------------------------------------------
 TfIdf::TfIdf(uint32_t doc_count) : doc_count(doc_count) {}
 //---------------------------------------------------------------------------
-double TfIdf::score(const DocStats& doc_stats, const QueryStats& query_stats) const {
-  double result = 0;
-  for (const auto& word : query_stats.query_words) {
-    result += (static_cast<double>(word.frequency) / static_cast<double>(doc_stats.doc_length)) *
-              idf(doc_count, word.total_count);
-  }
-  return result;
+double TfIdf::score(const DocStats& doc_stats, const WordStats& word_stats) const {
+  return (static_cast<double>(word_stats.frequency) / static_cast<double>(doc_stats.doc_length)) *
+         idf(doc_count, word_stats.total_count);
+}
+//---------------------------------------------------------------------------
+double TfIdf::score(const DocStats& doc_stats, const WordStats& word_stats, double idf) const {
+  return (static_cast<double>(word_stats.frequency) / static_cast<double>(doc_stats.doc_length)) *
+         idf;
 }
 //---------------------------------------------------------------------------
 }  // namespace scoring
