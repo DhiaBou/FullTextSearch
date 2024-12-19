@@ -48,6 +48,7 @@ class ScoringFunction {
    *
    * @param doc_stats The statistics for the document.
    * @param query_stats The statistics for the word.
+   * @param idf The idf value.
    * @return The calculated score for the document and word.
    */
   [[nodiscard]] virtual double score(const DocStats& doc_stats, const WordStats& word_stats,
