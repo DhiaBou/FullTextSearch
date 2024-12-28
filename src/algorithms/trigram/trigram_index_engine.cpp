@@ -40,8 +40,8 @@ void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
   avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
 }
 //---------------------------------------------------------------------------
-std::vector<DocumentID> TrigramIndexEngine::search(const std::string& query,
-                                                   const scoring::ScoringFunction& score_func) {
+std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
+    const std::string& query, const scoring::ScoringFunction& score_func, uint32_t num_results) {
   const char* begin = query.c_str();
   const char* end = query.c_str() + query.size();
   trigramlib::TrigramParser parser(begin, end);
@@ -57,25 +57,23 @@ std::vector<DocumentID> TrigramIndexEngine::search(const std::string& query,
     if (matches == nullptr) continue;
 
     for (const auto& match : *matches) {
-      doc_to_score[match.doc_id] +=
-          score_func.score({match.doc_id, doc_to_length[match.doc_id]},
-                           {{{match.freq, static_cast<uint32_t>(matches->size())}}});
+      doc_to_score[match.doc_id] += score_func.score(
+          {doc_to_length[match.doc_id]}, {match.freq, static_cast<uint32_t>(matches->size())});
     }
   }
 
   // Order by score
-  std::vector<std::pair<DocumentID, double>> sorted_result(doc_to_score.begin(),
-                                                           doc_to_score.end());
-  std::sort(sorted_result.begin(), sorted_result.end(),
+  std::vector<std::pair<DocumentID, double>> ordered_docs(doc_to_score.begin(), doc_to_score.end());
+  std::sort(ordered_docs.begin(), ordered_docs.end(),
             [](const auto& a, const auto& b) { return a.second > b.second; });
 
-  // Extract the top 10
-  std::vector<DocumentID> top_10_results;
-  for (size_t i = 0; i < 10 && i < sorted_result.size(); ++i) {
-    top_10_results.push_back(sorted_result[i].first);
+  // Extract top results
+  std::vector<std::pair<DocumentID, double>> results;
+  for (size_t i = 0; i < num_results && i < ordered_docs.size(); ++i) {
+    results.push_back(ordered_docs[i]);
   }
 
-  return top_10_results;
+  return results;
 }
 //---------------------------------------------------------------------------
 uint32_t TrigramIndexEngine::getDocumentCount() { return doc_count; }

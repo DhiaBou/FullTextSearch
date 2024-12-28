@@ -53,10 +53,7 @@ add_library(fts_lib
         src/tokenizer/tokenizer_rules.hpp
 )
 
-set(OBJECT_FILES
-)
-
-target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared ${OBJECT_FILES})
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)
 
 add_executable(fts src/main.cpp)
 target_link_libraries(fts PRIVATE fts_lib)

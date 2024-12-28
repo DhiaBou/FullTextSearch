@@ -12,8 +12,9 @@ class TrigramIndexEngine : public FullTextSearchEngine {
   /// Build the index.
   void indexDocuments(DocumentIterator it) override;
   /// Search for string.
-  std::vector<DocumentID> search(const std::string &query,
-                                 const scoring::ScoringFunction &score_func) override;
+  std::vector<std::pair<DocumentID, double>> search(const std::string &query,
+                                                    const scoring::ScoringFunction &score_func,
+                                                    uint32_t num_results) override;
 
   uint32_t getDocumentCount() override;
 

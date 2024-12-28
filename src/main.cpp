@@ -17,10 +17,15 @@ int main(int argc, char** argv) {
   cxxopts::Options options("Fulltext search",
                            "Multiple implementations of different fulltext search algorithms");
 
-  options.add_options()("d,data", "Path to the directory containing all data",
-                        cxxopts::value<std::string>())(
-      "a,algorithm", "Algorithm (inverted/vsm/trigram)", cxxopts::value<std::string>())(
-      "s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())("h,help", "Print usage");
+  // clang-format off
+  options.add_options()
+    ("d,data", "Path to the directory containing all data", cxxopts::value<std::string>())
+    ("a,algorithm", "Algorithm (inverted/vsm/trigram)", cxxopts::value<std::string>())
+    ("s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())
+    ("n,num_results", "Number of results displayed per query", cxxopts::value<uint32_t>()->default_value("10"))
+    ("h,help", "Print usage");
+  // clang-format on
+
   auto result = options.parse(argc, argv);
 
   if (result.count("data") == 0 || result.count("algorithm") == 0 || result.count("scoring") == 0) {
@@ -51,10 +56,8 @@ int main(int argc, char** argv) {
   std::unique_ptr<scoring::ScoringFunction> score_func;
   auto scoring_choice = result["scoring"].as<std::string>();
   if (scoring_choice == "bm25") {
-    double k1 = 1.5;
-    double b = 0.75;
-    score_func = std::make_unique<scoring::BM25>(engine->getDocumentCount(),
-                                                 engine->getAvgDocumentLength(), k1, b);
+    score_func =
+        std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
   } else if (scoring_choice == "tf-idf") {
     score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
   } else {
@@ -62,6 +65,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  uint32_t num_results = result["num_results"].as<uint32_t>();
   std::string query;
   while (true) {
     std::cout << "Enter query (!q to quit): ";
@@ -71,10 +75,10 @@ int main(int argc, char** argv) {
       break;
     }
 
-    auto results = engine->search(query, *score_func);
+    auto results = engine->search(query, *score_func, num_results);
 
-    for (const auto& doc : results) {
-      std::cout << doc << std::endl;
+    for (const auto& [doc_id, score] : results) {
+      std::cout << doc_id << "," << score << std::endl;
     }
   }
 
