@@ -8,7 +8,6 @@
 #include "algorithms/trigram/trigram_index_engine.hpp"
 #include "algorithms/vsm/vector_space_model_engine.hpp"
 #include "bootstrap/cli.hpp"
-#include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "queries/query_iterator.hpp"
 #include "scoring/bm25.hpp"
@@ -18,9 +17,6 @@
 int main(int argc, char** argv) {
   // Parse input arguments
   auto options = bootstrap::parseCommandLine(argc, argv);
-
-  // Prepare iterating over the documents
-  DocumentIterator it(options.data_path);
 
   // Decide for a FTS-Index-Engine
   auto algorithm_choice = std::move(options.algorithm);
@@ -35,6 +31,9 @@ int main(int argc, char** argv) {
     throw std::invalid_argument("Invalid algorithm choice!");
   }
 
+  // Build the FTS-Index
+  engine->indexDocuments(options.data_path);
+
   // Define the scoring function used to score documents
   std::unique_ptr<scoring::ScoringFunction> score_func;
   auto scoring_choice = std::move(options.scoring);
@@ -46,9 +45,6 @@ int main(int argc, char** argv) {
   } else {
     throw std::invalid_argument("Invalid scoring choice!");
   }
-
-  // Build the FTS-Index
-  engine->indexDocuments(std::move(it));
 
   // Execute queries on the FTS-Index
   std::unique_ptr<queries::QueryIterator> query_engine;

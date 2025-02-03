@@ -41,6 +41,8 @@ set(FTS_HEADERS
         src/tokenizer/ITokenizer.hpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
+        src/bootstrap/cli.hpp
+        src/queries/query_iterator.hpp
 )
 
 set(FTS_SOURCES
@@ -56,6 +58,8 @@ set(FTS_SOURCES
         src/tokenizer/snowball/stem_UTF_8_english.c
         src/tokenizer/stemmingtokenizer.cpp
         src/tokenizer/simpletokenizer.cpp
+        src/bootstrap/cli.cpp
+        src/queries/query_iterator.cpp
 )
 
 add_library(fts_lib
