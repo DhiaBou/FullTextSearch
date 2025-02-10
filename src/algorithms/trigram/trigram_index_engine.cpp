@@ -1,9 +1,11 @@
 #include <cassert>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 //---------------------------------------------------------------------------
 #include "../../tokenizer/simpletokenizer.hpp"
+#include "../../utils.hpp"
 #include "models/trigram.hpp"
 #include "parser/trigram_parser.hpp"
 #include "trigram_index_engine.hpp"
@@ -97,6 +99,67 @@ std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
   }
 
   return results;
+}
+//---------------------------------------------------------------------------
+/**
+ * Serialization format:
+ *
+ * 1. Meta-data:
+ * -------------
+ * 1.1 uint32_t doc_count              (4 bytes)
+ * 1.2 double avg_doc_length           (8 bytes)
+ * 1.3 uint32_t doc_to_length.size()   (4 bytes)
+ * 1.4 For each entry in doc_to_length:
+ *    a. uint32_t doc_id               (4 bytes)
+ *    b. uint32_t length               (4 bytes)
+ *
+ * 2. Index:
+ * ---------
+ * 2.1 Serialized index
+ */
+void TrigramIndexEngine::store(const std::string& path) {
+  std::ofstream file(fs::path(path), std::ios::binary);
+
+  // store meta-data
+  file.write(reinterpret_cast<const char*>(&doc_count), sizeof(doc_count));
+  file.write(reinterpret_cast<const char*>(&avg_doc_length), sizeof(avg_doc_length));
+  auto map_size = static_cast<uint32_t>(doc_to_length.size());
+  file.write(reinterpret_cast<const char*>(&map_size), sizeof(map_size));
+  for (const auto& [doc_id, length] : doc_to_length) {
+    file.write(reinterpret_cast<const char*>(&doc_id), sizeof(doc_id));
+    file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+  }
+
+  // store index
+  index.store(file);
+}
+//---------------------------------------------------------------------------
+void TrigramIndexEngine::load(const std::string& path) {
+  utils::FileReader file(path.c_str());
+  auto it = file.begin();
+  auto end = file.end();
+
+  // load meta-data
+  doc_count = *reinterpret_cast<const uint32_t*>(it);
+  it += sizeof(doc_count);
+
+  avg_doc_length = *reinterpret_cast<const double*>(it);
+  it += sizeof(avg_doc_length);
+
+  auto map_size = *reinterpret_cast<const uint32_t*>(it);
+  it += sizeof(map_size);
+  doc_to_length.reserve(map_size);
+
+  for (size_t i = 0; i < map_size; ++i) {
+    auto doc_id = *reinterpret_cast<const uint32_t*>(it);
+    it += sizeof(doc_id);
+    auto length = *reinterpret_cast<const uint32_t*>(it);
+    it += sizeof(length);
+    doc_to_length[doc_id] = length;
+  }
+
+  // load index
+  index.load(it, end);
 }
 //---------------------------------------------------------------------------
 uint32_t TrigramIndexEngine::getDocumentCount() { return doc_count; }

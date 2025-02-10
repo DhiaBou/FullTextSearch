@@ -1,8 +1,6 @@
 #ifndef TRIGRAM_INDEX_ENGINE_HPP
 #define TRIGRAM_INDEX_ENGINE_HPP
 //---------------------------------------------------------------------------
-#include <unordered_set>
-//---------------------------------------------------------------------------
 #include "../../fts_engine.hpp"
 #include "index/hash_index.hpp"
 #include "models/trigram.hpp"
@@ -15,6 +13,10 @@ class TrigramIndexEngine : public FullTextSearchEngine {
   std::vector<std::pair<DocumentID, double>> search(const std::string &query,
                                                     const scoring::ScoringFunction &score_func,
                                                     uint32_t num_results) override;
+  /// Store the index at specified location.
+  void store(const std::string &path);
+  /// Load the index from specified location.
+  void load(const std::string &path);
 
   /// Get the number of documents.
   uint32_t getDocumentCount() override;
