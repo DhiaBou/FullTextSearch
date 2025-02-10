@@ -50,7 +50,17 @@ int main(int argc, char** argv) {
   }
 
   // Build the index
-  engine->indexDocuments(std::move(it));
+  fs::path index_path = fs::current_path() / "serialized_index";
+  if (fs::exists(index_path)) {
+    // read from file
+    std::cout << "Loading existing index from file..." << std::endl;
+    engine->load(index_path.string());
+  } else {
+    // build from scratch
+    std::cout << "Building index from scratch..." << std::endl;
+    engine->indexDocuments(std::move(it));
+    engine->store(index_path.string());
+  }
 
   // Scoring
   std::unique_ptr<scoring::ScoringFunction> score_func;

@@ -21,3 +21,11 @@ uint32_t VectorSpaceModelEngine::getDocumentCount() {
 double VectorSpaceModelEngine::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
 }
+
+void VectorSpaceModelEngine::store(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}
+
+void VectorSpaceModelEngine::load(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}

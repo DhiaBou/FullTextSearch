@@ -15,6 +15,10 @@ class TrigramIndexEngine : public FullTextSearchEngine {
                                                     const scoring::ScoringFunction &score_func,
                                                     uint32_t num_results) override;
 
+  void store(const std::string &path) override;
+
+  void load(const std::string &path) override;
+
   uint32_t getDocumentCount() override;
 
   double getAvgDocumentLength() override;

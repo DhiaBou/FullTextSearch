@@ -48,6 +48,18 @@ class FullTextSearchEngine {
       const std::string &query, const scoring::ScoringFunction &score_func,
       uint32_t num_results) = 0;
   /**
+   * @brief Store the index at specified location.
+   *
+   * @param path The file path where the index should be stored.
+   */
+  virtual void store(const std::string &path) = 0;
+  /**
+   * @brief Load the index from specified location.
+   *
+   * @param path The file path where the index should be loaded from.
+   */
+  virtual void load(const std::string &path) = 0;
+  /**
    * @brief Gets the number of indexed documents.
    *
    * @return The number of indexed documents.
