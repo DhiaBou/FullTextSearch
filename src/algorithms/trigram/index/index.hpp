@@ -1,7 +1,7 @@
 #ifndef TRIGRAM_INDEX_INTERFACE_HPP
 #define TRIGRAM_INDEX_INTERFACE_HPP
 //---------------------------------------------------------------------------
-#include <cstdint>
+#include <fstream>
 //---------------------------------------------------------------------------
 #include "models/trigram.hpp"
 //---------------------------------------------------------------------------
@@ -16,6 +16,10 @@ class Index {
   virtual void insert(Trigram key, ValueT value) = 0;
   /// Lookup the value for given trigram.
   virtual ContainerT* lookup(Trigram key) = 0;
+  /// Write the underlying data structure to specified file.
+  virtual void store(std::ofstream& file) = 0;
+  /// Load the underlying data structure from given data.
+  virtual void load(const char* begin, const char* end) = 0;
 };
 //---------------------------------------------------------------------------
 template <typename ContainerT, uint8_t Size>

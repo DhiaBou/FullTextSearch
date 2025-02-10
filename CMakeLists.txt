@@ -19,6 +19,7 @@ endif()
 
 add_library(fts_lib
         src/fts_engine.hpp
+        src/utils.hpp
         src/documents/document.hpp
         src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
