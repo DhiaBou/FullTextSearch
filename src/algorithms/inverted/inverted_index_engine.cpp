@@ -124,3 +124,11 @@ double InvertedIndexEngine::getAvgDocumentLength() {
                 static_cast<double>(tokens_per_document_.size());
   return average_doc_length_;
 }
+
+void InvertedIndexEngine::store(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}
+
+void InvertedIndexEngine::load(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}

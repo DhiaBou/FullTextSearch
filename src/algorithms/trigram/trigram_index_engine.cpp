@@ -21,3 +21,11 @@ uint32_t TrigramIndexEngine::getDocumentCount() {
 double TrigramIndexEngine::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
 }
+
+void TrigramIndexEngine::store(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}
+
+void TrigramIndexEngine::load(const std::string &path) {
+  throw std::runtime_error("Method is not yet implemented.");
+}
