@@ -7,7 +7,7 @@
 
 #include "../../fts_engine.hpp"
 
-class VectorSpaceModelEngine : public FullTextSearchEngine {
+class VectorEngine : public FullTextSearchEngine {
  public:
   void indexDocuments(DocumentIterator it) override;
 

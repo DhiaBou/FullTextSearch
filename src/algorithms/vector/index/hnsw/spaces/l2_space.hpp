@@ -5,7 +5,7 @@
 #ifndef FTS_L2SPACE_H
 #define FTS_L2SPACE_H
 
-#include "../../VectorSpaceLib.h"
+#include "../../../vector_lib.hpp"
 
 namespace vectorlib {
 namespace hnsw {

@@ -29,8 +29,13 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
-        src/algorithms/vsm/vector_space_model_engine.cpp
-        src/algorithms/vsm/vector_space_model_engine.hpp
+        src/algorithms/vector/vector_engine.cpp
+        src/algorithms/vector/vector_engine.hpp
+        src/algorithms/vector/index/vector_lib.hpp
+        src/algorithms/vector/index/hnsw/hnsw_alg.cpp
+        src/algorithms/vector/index/hnsw/hnsw_alg.hpp
+        src/algorithms/vector/index/hnsw/visited_list.hpp
+        src/algorithms/vector/index/hnsw/spaces/l2_space.hpp
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c
@@ -43,11 +48,6 @@ add_library(fts_lib
         src/tokenizer/simpletokenizer.cpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
-        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.h
-        src/algorithms/VectorSpaceModel/index/VectorSpaceLib.h
-        src/algorithms/VectorSpaceModel/index/hnsw/HNSWAlg.cpp
-        src/algorithms/VectorSpaceModel/index/hnsw/spaces/L2Space.h
-        src/algorithms/VectorSpaceModel/index/hnsw/VisitedList.h
 )
 
 target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)

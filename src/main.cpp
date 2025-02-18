@@ -2,11 +2,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
-#include "algorithms/vsm/vector_space_model_engine.hpp"
+#include "algorithms/vector/vector_engine.hpp"
 #include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "scoring/bm25.hpp"
@@ -38,8 +37,8 @@ int main(int argc, char** argv) {
 
   auto algorithm_choice = result["algorithm"].as<std::string>();
   std::unique_ptr<FullTextSearchEngine> engine;
-  if (algorithm_choice == "vsm") {
-    engine = std::make_unique<VectorSpaceModelEngine>();
+  if (algorithm_choice == "vector") {
+    engine = std::make_unique<VectorEngine>();
   } else if (algorithm_choice == "inverted") {
     engine = std::make_unique<InvertedIndexEngine>();
   } else if (algorithm_choice == "trigram") {
