@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../VectorSpaceLib.h"
-#include "VisitedList.h"
+#include "../vector_lib.hpp"
+#include "visited_list.hpp"
 //--------------------------------------------------------------------------------------------------
 namespace vectorlib {
 //--------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     std::priority_queue<std::pair<dist_t, labeltype>> searchKnn(
         const void* queryData, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const override;
 
-    void saveIndex(const std::string& location);
+    void saveIndex(const std::string& location) override;
 
     void setEf(size_t ef);
 

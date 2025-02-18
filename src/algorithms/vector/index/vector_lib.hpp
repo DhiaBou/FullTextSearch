@@ -5,7 +5,6 @@
 #ifndef FTS_VECTORSPACELIB_H
 #define FTS_VECTORSPACELIB_H
 
-#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <queue>

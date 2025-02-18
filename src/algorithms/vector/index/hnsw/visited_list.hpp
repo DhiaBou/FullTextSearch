@@ -8,6 +8,7 @@
 #include <cstring>
 #include <deque>
 #include <mutex>
+
 namespace vectorlib {
 namespace hnsw {
 using vl_type = unsigned short int;

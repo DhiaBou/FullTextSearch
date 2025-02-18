@@ -1,15 +1,10 @@
-//
-// Created by miguel on 05.12.24.
-//
-
-#include "HNSWAlg.h"
 
 #include <assert.h>
-
 #include <fstream>
 
-#include "../VectorSpaceLib.h"
-#include "VisitedList.h"
+#include "hnsw_alg.hpp"
+#include "../vector_lib.hpp"
+#include "visited_list.hpp"
 
 // TODO: Have same order of functions in header and source file
 namespace vectorlib {
