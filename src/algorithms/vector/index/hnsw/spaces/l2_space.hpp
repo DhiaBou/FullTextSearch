@@ -4,7 +4,6 @@
 
 #ifndef FTS_L2SPACE_H
 #define FTS_L2SPACE_H
-
 #include <cstddef>
 #include "algorithms/vector/index/vector_lib.hpp"
 
