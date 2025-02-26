@@ -7,8 +7,8 @@
 #include <iostream>
 #include <thread>
 
-DocumentIterator::DocumentIterator(const std::string &folder_path)
-    : num_row_groups(0), batch_size(128), row_batch_index(0), row_group_index(0) {
+DocumentIterator::DocumentIterator(const std::string &folder_path, uint32_t batch_size)
+    : num_row_groups(0), row_group_index(0), batch_size(batch_size), row_batch_index(0) {
   // Enqueue all Parquet files from the folder
   for (const auto &entry : fs::directory_iterator(folder_path)) {
     if (entry.is_regular_file() && entry.path().extension() == ".parquet") {

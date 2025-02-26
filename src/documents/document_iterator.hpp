@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 class DocumentIterator {
  public:
   /// Constructor.
-  explicit DocumentIterator(const std::string &folder_path);
+  explicit DocumentIterator(const std::string &folder_path, uint32_t batch_size = 128);
 
   /// Prefix increment operator.
   void operator++();
