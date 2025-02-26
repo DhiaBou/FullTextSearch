@@ -23,15 +23,6 @@ class DocumentIterator {
   /// Constructor.
   explicit DocumentIterator(const std::string &folder_path, uint32_t batch_size = 128);
 
-  /// Prefix increment operator.
-  void operator++();
-  /// Postfix increment operator.
-  void operator++(int);
-  /// Dereference operator.
-  std::shared_ptr<Document> operator*();
-
-  /// Whether there is another batch of documents.
-  bool hasNext();
   /// @brief Produces the next batch of documents.
   /// @return The produced batch of documents.
   /// Empty if there are no documents left.

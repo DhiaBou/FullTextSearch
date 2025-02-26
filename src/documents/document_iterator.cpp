@@ -62,30 +62,6 @@ bool DocumentIterator::loadNextRowGroup() {
   return true;
 }
 
-bool DocumentIterator::hasNext() { return true; }
-
-std::shared_ptr<Document> DocumentIterator::operator*() {
-  int32_t length = 0;
-
-  const uint8_t *value = content_array->GetValue(0, &length);
-
-  std::shared_ptr<arrow::Buffer> buffer = content_array->value_data();
-
-  auto *data_ptr = reinterpret_cast<const char *>(value);
-
-  uint32_t doc_id = doc_id_array->GetView(0);
-
-  return std::make_shared<Document>(doc_id, data_ptr, length, buffer);
-}
-
-void DocumentIterator::operator++() {
-  if (!hasNext()) {
-    throw std::out_of_range("No more documents available");
-  }
-}
-
-void DocumentIterator::operator++(int) { ++(*this); }
-
 void DocumentIterator::readBatch(size_t start, size_t end, std::vector<Document> &docs) {
   for (size_t current = start; current < end; ++current) {
     // Read row
