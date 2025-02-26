@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-void TrigramIndexEngine::indexDocuments(DocumentIterator it) {
+void TrigramIndexEngine::indexDocuments(std::string &data_path) {
   throw std::runtime_error("indexDocuments method is not yet implemented.");
 }
 

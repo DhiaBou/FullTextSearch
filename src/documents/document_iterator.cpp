@@ -2,22 +2,23 @@
 
 #include <arrow/array.h>
 #include <arrow/memory_pool.h>
-#include <arrow/record_batch.h>
+#include <arrow/table.h>
 
-DocumentIterator::DocumentIterator(const std::string &folder_path) {
+#include <iostream>
+#include <thread>
+
+DocumentIterator::DocumentIterator(const std::string &folder_path)
+    : num_row_groups(0), batch_size(128), row_batch_index(0), row_group_index(0) {
   // Enqueue all Parquet files from the folder
   for (const auto &entry : fs::directory_iterator(folder_path)) {
     if (entry.is_regular_file() && entry.path().extension() == ".parquet") {
       file_queue.push(entry.path().string());
     }
   }
-
-  loadNextFile();
 }
 
 void DocumentIterator::loadNextFile() {
   if (file_queue.empty()) {
-    batch_reader.reset();
     arrow_reader.reset();
     return;
   }
@@ -32,69 +33,47 @@ void DocumentIterator::loadNextFile() {
   PARQUET_THROW_NOT_OK(
       parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &arrow_reader));
 
-  PARQUET_THROW_NOT_OK(
-      arrow_reader->GetRecordBatchReader({0}, &batch_reader));  // Read only column 0
+  num_row_groups = static_cast<uint32_t>(arrow_reader->num_row_groups());
+  row_group_index = 0;
 
-  current_row_index = 0;
-  total_rows_in_batch = 0;
-
-  if (!loadNextBatch()) {
-    loadNextFile();
-  }
+  loadNextRowGroup();
 }
 
-bool DocumentIterator::loadNextBatch() {
-  if (!batch_reader) {
-    return false;
-  }
+bool DocumentIterator::loadNextRowGroup() {
+  if (row_group_index == num_row_groups) return false;
 
-  PARQUET_THROW_NOT_OK(batch_reader->ReadNext(&current_batch));
+  std::shared_ptr<arrow::Table> table;
+  PARQUET_THROW_NOT_OK(arrow_reader->ReadRowGroup(row_group_index, &table));
+  PARQUET_ASSIGN_OR_THROW(table, table->CombineChunks());
 
-  if (!current_batch || current_batch->num_rows() == 0) {
-    return false;
-  }
+  std::shared_ptr<arrow::ChunkedArray> data_column = table->column(0);
+  std::shared_ptr<arrow::ChunkedArray> id_column = table->column(1);
 
-  data_array = std::dynamic_pointer_cast<arrow::BinaryArray>(current_batch->column(0));
-  doc_id_array = std::dynamic_pointer_cast<arrow::UInt32Array>(current_batch->column(1));
-  if (!data_array) {
+  content_array = std::dynamic_pointer_cast<arrow::BinaryArray>(data_column->chunk(0));
+  doc_id_array = std::dynamic_pointer_cast<arrow::UInt32Array>(id_column->chunk(0));
+
+  if (!content_array) {
     throw std::runtime_error("Column 0 is not of type BinaryArray");
   }
 
-  total_rows_in_batch = current_batch->num_rows();
-  current_row_index = 0;
+  ++row_group_index;
+  row_batch_index = 0;
 
   return true;
 }
 
-bool DocumentIterator::hasNext() {
-  while (true) {
-    if (!current_batch) {
-      return false;
-    }
-
-    if (current_row_index < total_rows_in_batch) {
-      return true;
-    } else if (loadNextBatch()) {
-      continue;
-    } else {
-      loadNextFile();
-      if (!current_batch) {
-        return false;
-      }
-    }
-  }
-}
+bool DocumentIterator::hasNext() { return true; }
 
 std::shared_ptr<Document> DocumentIterator::operator*() {
   int32_t length = 0;
 
-  const uint8_t *value = data_array->GetValue(current_row_index, &length);
+  const uint8_t *value = content_array->GetValue(0, &length);
 
-  std::shared_ptr<arrow::Buffer> buffer = data_array->value_data();
+  std::shared_ptr<arrow::Buffer> buffer = content_array->value_data();
 
   auto *data_ptr = reinterpret_cast<const char *>(value);
 
-  uint32_t doc_id = doc_id_array->GetView(current_row_index);
+  uint32_t doc_id = doc_id_array->GetView(0);
 
   return std::make_shared<Document>(doc_id, data_ptr, length, buffer);
 }
@@ -103,7 +82,54 @@ void DocumentIterator::operator++() {
   if (!hasNext()) {
     throw std::out_of_range("No more documents available");
   }
-  current_row_index++;
 }
 
 void DocumentIterator::operator++(int) { ++(*this); }
+
+void DocumentIterator::readBatch(size_t start, size_t end, std::vector<Document> &docs) {
+  for (size_t current = start; current < end; ++current) {
+    // Read row
+    int32_t length = 0;
+
+    const uint8_t *value = content_array->GetValue(current, &length);
+    std::shared_ptr<arrow::Buffer> buffer = content_array->value_data();
+    auto *data_ptr = reinterpret_cast<const char *>(value);
+
+    uint32_t doc_id = doc_id_array->GetView(current);
+
+    // Insert into document vector
+    docs[current & (batch_size - 1)] = Document(doc_id, data_ptr, length, buffer);
+  }
+}
+
+std::vector<Document> DocumentIterator::next() {
+  std::unique_lock lck(global_lock);
+
+  // current file exhausted
+  if (row_group_index == num_row_groups) {
+    loadNextFile();
+  }
+
+  // current row group exhausted
+  if (row_batch_index * batch_size >= content_array->length()) {
+    if (!loadNextRowGroup()) {
+      return {};
+    }
+  }
+
+  // read the next batch
+
+  // for the last batch, there might not be batch_size elements left
+  uint32_t real_batch_size = std::min(
+      batch_size, static_cast<uint32_t>(content_array->length() - batch_size * row_batch_index));
+
+  std::vector<Document> docs(real_batch_size);
+  readBatch(batch_size * row_batch_index,
+            std::min(static_cast<size_t>(batch_size * (row_batch_index + 1)),
+                     static_cast<size_t>(content_array->length())),
+            docs);
+
+  ++row_batch_index;
+
+  return docs;
+}

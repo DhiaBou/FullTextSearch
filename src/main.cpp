@@ -33,9 +33,6 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  auto directory_path = result["data"].as<std::string>();
-  DocumentIterator it(directory_path);
-
   auto algorithm_choice = result["algorithm"].as<std::string>();
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
@@ -50,7 +47,8 @@ int main(int argc, char** argv) {
   }
 
   // Build the index
-  engine->indexDocuments(std::move(it));
+  auto directory_path = result["data"].as<std::string>();
+  engine->indexDocuments(directory_path);
 
   // Scoring
   std::unique_ptr<scoring::ScoringFunction> score_func;

@@ -9,7 +9,8 @@
 
 #include "../../tokenizer/stemmingtokenizer.hpp"
 
-void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
+void InvertedIndexEngine::indexDocuments(std::string &data_path) {
+  DocumentIterator doc_it(data_path);
   do {
     auto doc = *doc_it;
     auto begin = doc->getData();
