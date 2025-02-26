@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "documents/document.hpp"
-#include "documents/document_iterator.hpp"
 #include "scoring/scoring_function.hpp"
 
 using DocumentID = uint32_t;

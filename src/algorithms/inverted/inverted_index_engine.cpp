@@ -7,6 +7,7 @@
 #include <numeric>
 #include <string>
 
+#include "../../documents/document_iterator.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(std::string &data_path) {
