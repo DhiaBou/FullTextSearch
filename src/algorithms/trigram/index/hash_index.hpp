@@ -27,8 +27,11 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
   std::vector<DocFreq>* lookup(Trigram key) override {
     auto it = table.find(key);
     if (it != table.end()) {
-      // TODO: Bug, offset can be larger than container size
-      return &it->second.containers[key.getWordOffset()];
+      uint8_t offset = key.getWordOffset();
+      if (offset >= BucketSize) {
+        offset = BucketSize - 1;
+      }
+      return &it->second.containers[offset];
     }
     return nullptr;
   }
