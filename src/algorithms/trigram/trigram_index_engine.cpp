@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 //---------------------------------------------------------------------------
 #include "../../tokenizer/simpletokenizer.hpp"
 #include "../../utils.hpp"
@@ -10,43 +11,31 @@
 #include "parser/trigram_parser.hpp"
 #include "trigram_index_engine.hpp"
 //---------------------------------------------------------------------------
-void TrigramIndexEngine::indexDocuments(DocumentIterator doc_it) {
-  uint64_t total_trigram_count = 0;
+void TrigramIndexEngine::indexDocuments(std::string& data_path) {
+  DocumentIterator doc_it(data_path);
+  std::atomic<uint64_t> total_trigram_count = 0;
 
-  // Iterate documents
-  while (doc_it.hasNext()) {
-    uint32_t doc_length = 0;
-    std::unordered_map<trigramlib::Trigram, uint32_t> appearances;
-    auto doc = *doc_it;
+  auto thread_count = std::thread::hardware_concurrency();
+  std::vector<std::thread> threads;
+  std::vector<trigramlib::HashIndex<16>> local_indexes(thread_count);
+  std::vector<std::unordered_map<DocumentID, uint32_t>> local_doc_to_lengths(thread_count);
 
-    tokenizer::SimpleTokenizer tokenizer(doc->getData(), doc->getSize());
-
-    // Tokenize the document
-    for (auto token = tokenizer.nextToken(false); !token.empty();
-         token = tokenizer.nextToken(false)) {
-      const char* begin = token.c_str();
-      const char* end = token.c_str() + token.size();
-      trigramlib::TrigramParser trigram_parser(begin, end);
-
-      // Parse the token
-      while (trigram_parser.hasNext()) {
-        ++appearances[trigram_parser.next()];
-        ++doc_length;
-      }
-    }
-
-    // Insert into index
-    for (const auto& [trigram, count] : appearances) {
-      index.insert(trigram, {doc->getId(), count});
-    }
-
-    // Update statistics
-    total_trigram_count += doc_length;
-    doc_to_length[doc->getId()] = doc_length;
-    ++doc_count;
-
-    ++doc_it;
+  // diverge
+  for (size_t i = 0; i < thread_count; ++i) {
+    threads.push_back(std::thread([this, &doc_it, &total_trigram_count, &local_indexes,
+                                   &local_doc_to_lengths, i]() {
+      total_trigram_count += consumeDocuments(doc_it, local_indexes[i], local_doc_to_lengths[i]);
+    }));
   }
+  for (auto& t : threads) {
+    t.join();
+  }
+
+  // merge
+  merge(local_indexes);
+  index = std::move(local_indexes[0]);
+  utils::merge<DocumentID>(local_doc_to_lengths);
+  doc_to_length = std::move(local_doc_to_lengths[0]);
 
   avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
 }
@@ -160,6 +149,66 @@ void TrigramIndexEngine::load(const std::string& path) {
 
   // load index
   index.load(it, end);
+}
+//---------------------------------------------------------------------------
+void TrigramIndexEngine::merge(std::vector<trigramlib::HashIndex<16>>& indexes) {
+  auto& main_index = indexes[0];
+  for (size_t i = 1; i < indexes.size(); ++i) {
+    for (auto& [trigram, bucket] : indexes[i]) {
+      for (const auto& doc_freq : bucket) {
+        main_index.insert(trigram, doc_freq);
+      }
+    }
+  }
+}
+//---------------------------------------------------------------------------
+uint64_t TrigramIndexEngine::consumeDocuments(
+    DocumentIterator& doc_it, trigramlib::HashIndex<16>& local_index,
+    std::unordered_map<DocumentID, uint32_t>& local_doc_to_length) {
+  uint64_t local_trigram_count = 0;
+  uint32_t local_doc_count = 0;
+
+  std::vector<Document> docs = doc_it.next();
+  while (!docs.empty()) {
+    for (const auto& doc : docs) {
+      uint32_t doc_length = 0;
+      // Count the number of occurences per trigram for the scoring.
+      // Note: Since the hash and equality function of the trigram do NOT
+      // differentiate word offset, which is wanted here, the trigram's
+      // raw value is used.
+      std::unordered_map<uint32_t, uint32_t> trigram_occurences;
+
+      tokenizer::SimpleTokenizer tokenizer(doc.getData(), doc.getSize());
+
+      // Tokenize the document
+      for (auto token = tokenizer.nextToken(false); !token.empty();
+           token = tokenizer.nextToken(false)) {
+        const char* begin = token.c_str();
+        const char* end = token.c_str() + token.size();
+        trigramlib::TrigramParser trigram_parser(begin, end);
+
+        // Parse the token
+        while (trigram_parser.hasNext()) {
+          ++trigram_occurences[trigram_parser.next().getRawValue()];
+          ++doc_length;
+        }
+      }
+
+      // Insert into index
+      for (const auto& [raw_trigram, count] : trigram_occurences) {
+        local_index.insert(trigramlib::Trigram(raw_trigram), {doc.getId(), count});
+      }
+
+      // Update statistics
+      local_trigram_count += doc_length;
+      local_doc_to_length[doc.getId()] = doc_length;
+      ++local_doc_count;
+    }
+    docs = doc_it.next();
+  }
+  doc_count += local_doc_count;
+
+  return local_trigram_count;
 }
 //---------------------------------------------------------------------------
 uint32_t TrigramIndexEngine::getDocumentCount() { return doc_count; }

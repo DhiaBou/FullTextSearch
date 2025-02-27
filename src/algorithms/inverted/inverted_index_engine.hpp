@@ -11,7 +11,7 @@ struct Token;
 
 class InvertedIndexEngine : public FullTextSearchEngine {
  public:
-  void indexDocuments(DocumentIterator it) override;
+  void indexDocuments(std::string &data_path) override;
 
   std::vector<std::pair<DocumentID, double>> search(const std::string &query,
                                                     const scoring::ScoringFunction &score_func,

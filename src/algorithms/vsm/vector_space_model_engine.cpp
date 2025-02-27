@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-void VectorSpaceModelEngine::indexDocuments(DocumentIterator it) {
+void VectorSpaceModelEngine::indexDocuments(std::string &data_path) {
   throw std::runtime_error("indexDocuments method is not yet implemented.");
 }
 

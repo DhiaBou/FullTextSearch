@@ -7,26 +7,29 @@
 #include <numeric>
 #include <string>
 
+#include "../../documents/document_iterator.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 
-void InvertedIndexEngine::indexDocuments(DocumentIterator doc_it) {
-  do {
-    auto doc = *doc_it;
-    auto begin = doc->getData();
-    auto end = begin + doc->getSize();
+void InvertedIndexEngine::indexDocuments(std::string &data_path) {
+  DocumentIterator doc_it(data_path);
+  std::vector<Document> current_batch = doc_it.next();
+  while (!current_batch.empty()) {
+    for (Document &doc : current_batch) {
+      auto begin = doc.getData();
 
-    tokenizer::StemmingTokenizer tokenizer(begin, doc->getSize());
+      tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
 
-    for (auto token = tokenizer.nextToken(false); !token.empty();
-         token = tokenizer.nextToken(false)) {
-      // increment the number of times a token appeared in that document
-      term_frequency_per_document_[token][doc->getId()]++;
-      // increase the total number of terms in doc d
-      tokens_per_document_[doc->getId()]++;
+      for (auto token = tokenizer.nextToken(false); !token.empty();
+           token = tokenizer.nextToken(false)) {
+        // increment the number of times a token appeared in that document
+        term_frequency_per_document_[token][doc.getId()]++;
+        // increase the total number of terms in doc d
+        tokens_per_document_[doc.getId()]++;
+      }
     }
 
-    ++doc_it;
-  } while (doc_it.hasNext());
+    current_batch = doc_it.next();
+  }
 }
 
 double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {

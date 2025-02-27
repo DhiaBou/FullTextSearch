@@ -10,10 +10,98 @@ namespace trigramlib {
 template <uint8_t BucketSize>
 class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
  public:
+  //---------------------------------------------------------------------------
+  struct Entry {
+    /// Default constructor.
+    Entry() : trigram(0), doc_freqs({}) {}
+    /// Constructor.
+    Entry(Trigram trigram, std::vector<DocFreq> doc_freqs)
+        : trigram(trigram), doc_freqs(std::move(doc_freqs)) {}
+    /// The entry's trigram.
+    Trigram trigram;
+    /// The entry's pair of document ID and frequency.
+    std::vector<DocFreq> doc_freqs;
+  };
+  //---------------------------------------------------------------------------
+  class EntryIterator {
+   public:
+    using iterator_category = std::forward_iterator_tag;
+    using MapIterator =
+        std::unordered_map<Trigram, Bucket<std::vector<DocFreq>, BucketSize>>::iterator;
+    using ContainerIterator = std::vector<DocFreq>::iterator;
+
+    /// Constructor.
+    EntryIterator(MapIterator begin, MapIterator end) : begin(begin), end(end) {
+      if (begin != end) {
+        advance();
+      }
+    }
+    /// Dereference operator.
+    Entry& operator*() { return current; }
+    /// Member access operator.
+    Entry* operator->() { return &current; }
+    /// Pre-increment operator.
+    EntryIterator& operator++() {
+      advance();
+      return *this;
+    }
+    /// Post-increment operator.
+    EntryIterator operator++(int) {
+      EntryIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    /// Equality operator.
+    bool operator==(const EntryIterator other) {
+      return begin == other.begin && current_cont == other.current_cont;
+    }
+    /// Inequality operator.
+    bool operator!=(const EntryIterator other) { return !(*this == other); }
+
+   private:
+    void advance() {
+      while (begin != end) {
+        if (current_cont >= BucketSize) {
+          ++begin;
+          current_cont = 0;
+          continue;
+        }
+        auto& container = begin->second.containers[current_cont];
+        if (container.begin() == container.end()) {
+          ++current_cont;
+        } else {
+          Trigram trigram = begin->first;
+          trigram.setWordOffset(current_cont);
+          current = Entry(trigram, begin->second.containers[current_cont]);
+          ++current_cont;
+          return;
+        }
+      }
+      current = Entry(Trigram(), {});
+    }
+    Entry current;
+    MapIterator begin;
+    MapIterator end;
+    uint8_t current_cont = 0;
+  };
+  //---------------------------------------------------------------------------
   /// Constructor.
   HashIndex() = default;
+  /// Move Constructor.
+  HashIndex(HashIndex&& other) noexcept : table(std::move(other.table)) {}
+  /// Move assignment.
+  HashIndex& operator=(HashIndex&& other) noexcept {
+    if (this != &other) {
+      table = std::move(other.table);
+    }
+    return *this;
+  }
   /// Destructor.
   ~HashIndex() override = default;
+  /// Begin-Iterator.
+  EntryIterator begin() { return EntryIterator(table.begin(), table.end()); }
+  /// End-Iterator.
+  EntryIterator end() { return EntryIterator(table.end(), table.end()); }
   /// Insert a key-value pair into the index.
   void insert(Trigram key, DocFreq value) override {
     auto& bucket = table[key];

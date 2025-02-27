@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "documents/document.hpp"
-#include "documents/document_iterator.hpp"
 #include "scoring/scoring_function.hpp"
 
 using DocumentID = uint32_t;
@@ -33,7 +32,7 @@ class FullTextSearchEngine {
    *
    * @param it DocumentIterator providing access to the documents to be indexed.
    */
-  virtual void indexDocuments(DocumentIterator it) = 0;
+  virtual void indexDocuments(std::string &data_path) = 0;
   /**
    * @brief Searches for documents matching the given query.
    *
