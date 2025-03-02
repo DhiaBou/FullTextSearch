@@ -29,12 +29,13 @@ class DocumentIterator {
 
  private:
   /// Load the next file in the given directory.
-  void loadNextFile();
+  /// @return False if there is no file left.
+  bool loadNextFile();
   /// Load the next row group.
   /// @return False if there is no row group left.
   bool loadNextRowGroup();
   /// Read raw data within provided borders into the document vector.
-  void readBatch(size_t start, size_t num_rows, std::vector<Document> &docs);
+  void readBatch(size_t start, size_t num_rows, std::vector<Document> &docs) const;
 
   /// A queue of parquet files contained in the specified directory.
   std::queue<std::string> file_queue;

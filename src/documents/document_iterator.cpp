@@ -4,7 +4,7 @@
 #include <arrow/memory_pool.h>
 #include <arrow/table.h>
 
-#include <iostream>
+#include <mutex>
 #include <thread>
 
 DocumentIterator::DocumentIterator(const std::string &folder_path, uint32_t batch_size)
@@ -15,12 +15,14 @@ DocumentIterator::DocumentIterator(const std::string &folder_path, uint32_t batc
       file_queue.push(entry.path().string());
     }
   }
+
+  loadNextRowGroup();
 }
 
-void DocumentIterator::loadNextFile() {
+bool DocumentIterator::loadNextFile() {
   if (file_queue.empty()) {
     arrow_reader.reset();
-    return;
+    return false;
   }
 
   std::string current_file_name = file_queue.front();
@@ -35,12 +37,13 @@ void DocumentIterator::loadNextFile() {
 
   num_row_groups = static_cast<uint32_t>(arrow_reader->num_row_groups());
   row_group_index = 0;
-
-  loadNextRowGroup();
+  return true;
 }
 
 bool DocumentIterator::loadNextRowGroup() {
-  if (row_group_index == num_row_groups) return false;
+  if (row_group_index == num_row_groups) {
+    if (!loadNextFile()) return false;
+  };
 
   std::shared_ptr<arrow::Table> table;
   PARQUET_THROW_NOT_OK(arrow_reader->ReadRowGroup(row_group_index, &table));
@@ -62,7 +65,7 @@ bool DocumentIterator::loadNextRowGroup() {
   return true;
 }
 
-void DocumentIterator::readBatch(size_t start, size_t end, std::vector<Document> &docs) {
+void DocumentIterator::readBatch(size_t start, size_t end, std::vector<Document> &docs) const {
   for (size_t current = start; current < end; ++current) {
     // Read row
     int32_t length = 0;
@@ -81,19 +84,12 @@ void DocumentIterator::readBatch(size_t start, size_t end, std::vector<Document>
 std::vector<Document> DocumentIterator::next() {
   std::unique_lock lck(global_lock);
 
-  // current file exhausted
-  if (row_group_index == num_row_groups) {
-    loadNextFile();
-  }
-
   // current row group exhausted
   if (row_batch_index * batch_size >= content_array->length()) {
     if (!loadNextRowGroup()) {
       return {};
     }
   }
-
-  // read the next batch
 
   // for the last batch, there might not be batch_size elements left
   uint32_t real_batch_size = std::min(
