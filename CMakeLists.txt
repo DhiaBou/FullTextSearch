@@ -35,10 +35,13 @@ set(FTS_HEADERS
         src/algorithms/trigram/parser/trigram_parser.hpp
         src/algorithms/vsm/vector_space_model_engine.hpp
         src/tokenizer/snowball/api.h
+        src/tokenizer/snowball/api.c
+        src/tokenizer/snowball/utilities.c
         src/tokenizer/snowball/header.h
         src/tokenizer/snowball/stem_UTF_8_english.h
         src/tokenizer/stemmingtokenizer.hpp
         src/tokenizer/ITokenizer.hpp
+        src/tokenizer/simpletokenizer.cpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
         src/bootstrap/cli.hpp
