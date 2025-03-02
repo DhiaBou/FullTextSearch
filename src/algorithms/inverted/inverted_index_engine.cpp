@@ -8,11 +8,17 @@
 #include <string>
 #include <thread>
 
+#include "datastructures/hyperloglog.hpp"
 #include "documents/document_iterator.hpp"
 #include "tokenizer/simpletokenizer.hpp"
 #include "tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(std::string &data_path) {
+
+  auto [num_token, max_doc_id] = getNumTokensAndMaxDocId(data_path);
+  term_frequency_per_document_ = ParallelHashTable<std::string, std::unordered_map<DocumentID, uint32_t>>{num_token};
+  tokens_per_document_.resize(max_doc_id + 1);
+
   DocumentIterator doc_it(data_path);
 
   auto index_batches = [&doc_it, this]() {
@@ -33,21 +39,15 @@ void InvertedIndexEngine::indexDocuments(std::string &data_path) {
           term_frequency_per_document_.updateOrInsert(token, increase_term_frequency,
                                                       std::unordered_map<DocumentID, uint32_t>{});
           // increase the total number of terms in doc d
-          auto increase_token_frequency = [](uint32_t &old_frequency) { old_frequency++; };
-          tokens_per_document_.updateOrInsert(doc.getId(), increase_token_frequency, 0);
+          tokens_per_document_[doc.getId()]++;
         }
       }
       current_batch = doc_it.next();
     }
   };
 
-  unsigned int num_threads = std::thread::hardware_concurrency();
-  if (num_threads == 0) {
-    num_threads = 4;
-  }
-
   std::vector<std::thread> threads;
-  for (int i = 0; i < num_threads; i++) {
+  for (int i = 0; i < NUM_THREADS; i++) {
     threads.push_back(std::thread{index_batches});
   }
   for (auto &thread : threads) {
@@ -69,9 +69,9 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &
   }
 
   uint32_t tf = it->second;
-  uint32_t totalTokens = *tokens_per_document_.get(docId);
+  uint32_t totalTokens = tokens_per_document_[docId];
   uint32_t docsContainingToken = freqMap.size();
-  uint32_t totalDocs = 0;  // tokens_per_document_.size();
+  uint32_t totalDocs = tokens_per_document_.size();
 
   if (totalTokens == 0 || docsContainingToken == 0 || totalDocs == 0) {
     return 0.0;
@@ -83,6 +83,50 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &
 
   return termFrequency * idf;
 }
+
+std::pair<uint64_t, uint64_t> InvertedIndexEngine::getNumTokensAndMaxDocId(const std::string &data_path) const {
+  DocumentIterator doc_it(data_path);
+
+  std::atomic<uint32_t> max_doc_id = 0;
+
+  HyperLogLog<std::string> hyper_log_log{NUM_THREADS};
+
+  auto count_distinct_tokens = [&doc_it, &hyper_log_log, &max_doc_id](uint64_t thread_id) {
+    std::vector<Document> current_batch = doc_it.next();
+    uint32_t local_max_doc_id = 0;
+    while (!current_batch.empty()) {
+      for (Document &doc : current_batch) {
+        local_max_doc_id = std::max(local_max_doc_id, doc.getId());
+        auto begin = doc.getData();
+
+        tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
+
+        for (auto token = tokenizer.nextToken(false); !token.empty();
+             token = tokenizer.nextToken(false)) {
+          hyper_log_log.add(token, thread_id);
+        }
+      }
+      current_batch = doc_it.next();
+    }
+
+
+    uint32_t current_max_doc_id = max_doc_id.load();
+    while (current_max_doc_id < local_max_doc_id && !max_doc_id.compare_exchange_weak(current_max_doc_id, local_max_doc_id)) {
+      current_max_doc_id = max_doc_id.load();
+    }
+  };
+
+  std::vector<std::thread> threads;
+  for (int i = 0; i < NUM_THREADS; i++) {
+    threads.emplace_back(count_distinct_tokens, i);
+  }
+  for (auto &thread : threads) {
+    thread.join();
+  }
+
+  return {hyper_log_log.getCount(), max_doc_id};
+}
+
 std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
     const std::string &query, const scoring::ScoringFunction &score_func, uint32_t num_results) {
   // Tokenize the query
@@ -148,11 +192,11 @@ double InvertedIndexEngine::getAvgDocumentLength() {
     return average_doc_length_;
   }
   average_doc_length_ =
-      true  // tokens_per_document_.empty()
+      tokens_per_document_.empty()
           ? 0.0
           : static_cast<double>(std::accumulate(
                 tokens_per_document_.begin(), tokens_per_document_.end(), 0ull,
-                [](uint32_t sum, const auto &entry) { return sum + entry.second; })) /
+                [](uint32_t sum, const uint32_t &entry) { return sum + entry; })) /
                 static_cast<double>(tokens_per_document_.size());
   return average_doc_length_;
 }
