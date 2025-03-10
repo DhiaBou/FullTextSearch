@@ -1,6 +1,8 @@
 #include "vector_engine.hpp"
 #include "./index/hnsw/hnsw_alg.hpp"
 #include "algorithms/vector/index/hnsw/spaces/l2_space.hpp"
+#include "documents/document.hpp"
+#include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "vector.h"
 
@@ -9,6 +11,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <thread>
+
 //---------------------------------------------------------------------------
 using idx_t = vectorlib::labeltype;
 namespace hnsw = vectorlib::hnsw;
@@ -29,20 +33,52 @@ static void getEmbedding(fasttext::FastText& model, const char* text, fasttext::
     model.getSentenceVector(text_stream, fasttext_embedding);
 }
 //---------------------------------------------------------------------------
-void VectorEngine::indexDocuments(DocumentIterator doc_it) {
-  fasttext::Vector embedding(model.getDimension());
+void VectorEngine::indexDocuments(std::string &data_path) {
+  auto start_time = std::chrono::high_resolution_clock::now(); // Start timing
+
+  DocumentIterator doc_it(data_path);
+  size_t NUM_THREADS = 8;
+
+  int counter = 0;
   
-  for (;doc_it.hasNext(); ++doc_it) {
-    auto doc = *doc_it;
-    std::cout << std::format("#{} - DocID {} of size {}", doc_count,  doc->getId(), doc->getSize()) << std::endl;
-    
-    getEmbedding(model, doc->getData(), embedding);
+  std::vector<std::thread> workers;
+  workers.reserve(NUM_THREADS);
+  for (size_t i = 0; i < NUM_THREADS; ++i) {
+    workers.emplace_back([&]() {
+      fasttext::Vector embedding(model.getDimension());  // Local embedding per thread
+      std::vector<Document> current_batch = doc_it.next();
 
-    hnsw_alg->addPoint(embedding.data(), doc->getId());
+      while (!current_batch.empty()) {
 
-    ++doc_count;
-    total_docs_length += doc->getSize();
+        for (Document &doc : current_batch) {
+          std::cout << std::format("#{} - DocID {} of size {}", doc_count,  doc.getId(), doc.getSize()) << std::endl;
+          
+          getEmbedding(model, doc.getData(), embedding);
+
+          hnsw_alg->addPoint(embedding.data(), doc.getId());
+
+          ++doc_count;
+          total_docs_length += doc.getSize();
+        }
+
+        current_batch = doc_it.next();
+        counter += 128;
+
+        std::cout << std::format("Indexed around {} documents so far.\n", counter);
+
+      }
+    });
   }
+
+  for (auto &worker: workers) {
+    worker.join();
+  }
+
+  auto end_time = std::chrono::high_resolution_clock::now(); // End timing
+  std::chrono::duration<double> elapsed_time = end_time - start_time;
+
+  std::cout << std::format("Indexing completed in {:.2f} seconds\n", elapsed_time.count());
+
 }
 //---------------------------------------------------------------------------
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
