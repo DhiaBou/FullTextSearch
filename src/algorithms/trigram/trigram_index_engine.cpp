@@ -43,36 +43,30 @@ void TrigramIndexEngine::indexDocuments(std::string& data_path) {
 std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
     const std::string& query, const scoring::ScoringFunction& score_func, uint32_t num_results) {
   std::unordered_map<DocumentID, double> doc_to_score;
-  tokenizer::SimpleTokenizer tokenizer(query.c_str(), query.size());
 
-  // Tokenize the query
-  for (auto token = tokenizer.nextToken(false); !token.empty();
-       token = tokenizer.nextToken(false)) {
-    const char* begin = token.c_str();
-    const char* end = token.c_str() + token.size();
-    trigramlib::TrigramParser trigram_parser(begin, end);
+  const char* begin = query.c_str();
+  const char* end = query.c_str() + query.size();
+  trigramlib::TrigramParser trigram_parser(begin, end);
 
-    // The query's trigrams found in the index
-    std::vector<std::vector<trigramlib::DocFreq>*> trigram_results;
+  // The query's trigrams found in the index
+  std::vector<std::vector<trigramlib::DocFreq>*> trigram_results;
 
-    // Parse the token
-    while (trigram_parser.hasNext()) {
-      trigramlib::Trigram trigram = trigram_parser.next();
+  // Parse the data
+  while (trigram_parser.hasNext()) {
+    trigramlib::Trigram trigram = trigram_parser.next();
+    // Lookup the trigram in the index
+    trigram_results.emplace_back(index.lookup(trigram));
+  }
 
-      // Lookup the trigram in the index
-      trigram_results.emplace_back(index.lookup(trigram));
-    }
+  // Aggregate and normalize the scores
+  for (const auto& result : trigram_results) {
+    if (result == nullptr) continue;
 
-    // Aggregate and normalize the scores
-    for (const auto& result : trigram_results) {
-      if (result == nullptr) continue;
-
-      for (const auto& match : *result) {
-        doc_to_score[match.doc_id] +=
-            score_func.score({doc_to_length[match.doc_id]},
-                             {match.freq, static_cast<uint32_t>(result->size())}) /
-            static_cast<double>(trigram_results.size());
-      }
+    for (const auto& match : *result) {
+      doc_to_score[match.doc_id] +=
+          score_func.score({doc_to_length[match.doc_id]},
+                           {match.freq, static_cast<uint32_t>(result->size())}) /
+          static_cast<double>(trigram_results.size());
     }
   }
 
@@ -178,20 +172,14 @@ uint64_t TrigramIndexEngine::consumeDocuments(
       // raw value is used.
       std::unordered_map<uint32_t, uint32_t> trigram_occurences;
 
-      tokenizer::SimpleTokenizer tokenizer(doc.getData(), doc.getSize());
+      const char* begin = doc.getData();
+      const char* end = doc.getData() + doc.getSize();
+      trigramlib::TrigramParser trigram_parser(begin, end);
 
-      // Tokenize the document
-      for (auto token = tokenizer.nextToken(false); !token.empty();
-           token = tokenizer.nextToken(false)) {
-        const char* begin = token.c_str();
-        const char* end = token.c_str() + token.size();
-        trigramlib::TrigramParser trigram_parser(begin, end);
-
-        // Parse the token
-        while (trigram_parser.hasNext()) {
-          ++trigram_occurences[trigram_parser.next().getRawValue()];
-          ++doc_length;
-        }
+      // Parse the data
+      while (trigram_parser.hasNext()) {
+        ++trigram_occurences[trigram_parser.next().getRawValue()];
+        ++doc_length;
       }
 
       // Insert into index
