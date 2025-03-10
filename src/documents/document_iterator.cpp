@@ -4,7 +4,6 @@
 #include <arrow/memory_pool.h>
 #include <arrow/table.h>
 
-#include <mutex>
 #include <thread>
 
 DocumentIterator::DocumentIterator(const std::string &folder_path, uint32_t batch_size)
