@@ -41,7 +41,6 @@ void TrigramIndexEngine::indexDocuments(std::string& data_path) {
 std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
     const std::string& query, const scoring::ScoringFunction& score_func, uint32_t num_results) {
   std::unordered_map<DocumentID, double> doc_to_score;
-  tokenizer::SimpleTokenizer tokenizer(query.c_str(), query.size());
 
   const char* begin = query.c_str();
   const char* end = query.c_str() + query.size();
