@@ -5,6 +5,12 @@
 #ifndef VECTORSPACEMODELENGINE_HPP
 #define VECTORSPACEMODELENGINE_HPP
 
+#include <sys/types.h>
+
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "../../fts_engine.hpp"
 
 class VectorEngine : public FullTextSearchEngine {
@@ -20,6 +26,18 @@ class VectorEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
+  /// key is token, value is a map of doc id to term frequency
+  std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t>>
+      term_frequency_per_document_;
+
+  /// key is document id, value is number of tokens or terms
+  std::unordered_map<DocumentID, uint32_t> tokens_per_document_;
+
+  /// key is token, value is number of documents this token appears in
+  std::unordered_map<std::string, uint32_t> documents_per_token_;
+
+  /// key is document id, value is the vector of the document
+  std::unordered_map<DocumentID, std::vector<uint32_t>> document_to_vector_;
 };
 
 #endif  // VECTORSPACEMODELENGINE_HPP
