@@ -26,6 +26,9 @@ class VectorEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
+  // prints the vector of each document
+  void print_vector(DocumentID doc_id);
+
   /// key is token, value is a map of doc id to term frequency
   std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t>>
       term_frequency_per_document_;

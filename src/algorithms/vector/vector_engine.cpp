@@ -10,6 +10,13 @@
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/simpletokenizer.hpp"
 
+void VectorEngine::print_vector(DocumentID doc_id) {
+  int i = 0;
+  for (const auto &[token, num_docs_with_token] : documents_per_token_) {
+    std::cout << "token index: " << i << ", token: " << token << "\n";
+  }
+}
+
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // TODO:
   // 1. Count total frequency of a term in all documents all over
