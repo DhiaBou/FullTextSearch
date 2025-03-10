@@ -146,7 +146,15 @@ void TrigramIndexEngine::load(const std::string& path) {
 }
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::merge(std::vector<trigramlib::HashIndex<16>>& indexes) {
+  // TODO: Make multi-threaded
+  // TODO: Make stop_count parametrizable
+
+  // In the merge phase, the number of documents is known and can thus be used
+  // for the stop count.
+  uint32_t stop_count = doc_count / 5;
+
   auto& main_index = indexes[0];
+  main_index.setStopCount(stop_count);
   for (size_t i = 1; i < indexes.size(); ++i) {
     for (auto& [trigram, bucket] : indexes[i]) {
       for (const auto& doc_freq : bucket) {

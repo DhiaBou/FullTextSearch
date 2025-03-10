@@ -102,16 +102,26 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
   EntryIterator begin() { return EntryIterator(table.begin(), table.end()); }
   /// End-Iterator.
   EntryIterator end() { return EntryIterator(table.end(), table.end()); }
-  /// Insert a key-value pair into the index.
+  //---------------------------------------------------------------------------
   void insert(Trigram key, DocFreq value) override {
+    if (this->stop_trigrams.contains(key.getRawValue())) return;
+
+    // Bucket Lookup
     auto& bucket = table[key];
     uint8_t offset = key.getWordOffset();
     if (offset >= BucketSize) {
       offset = BucketSize - 1;
     }
-    bucket.containers[offset].push_back(value);
+    // Container Lookup
+    auto& container = bucket.containers[offset];
+    if (this->stop_count > 0 && container.size() > this->stop_count) {
+      this->stop_trigrams.insert(key.getRawValue());
+      container.clear();
+    } else {
+      container.push_back(value);
+    }
   }
-  /// Lookup the value for given trigram.
+  //---------------------------------------------------------------------------
   std::vector<DocFreq>* lookup(Trigram key) override {
     auto it = table.find(key);
     if (it != table.end()) {
@@ -123,6 +133,7 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
     }
     return nullptr;
   }
+  //---------------------------------------------------------------------------
   /**
    * Write the underlying data structure to specified file.
    *
@@ -160,8 +171,7 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
       }
     }
   }
-
-  /// Load the underlying data structure from given data.
+  //---------------------------------------------------------------------------
   void load(const char* it, const char* end) override {
     auto table_size = *reinterpret_cast<const uint32_t*>(it);
     it += sizeof(table_size);
@@ -192,6 +202,8 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
       }
     }
   }
+  //---------------------------------------------------------------------------
+  void setStopCount(uint32_t stop_count) override { this->stop_count = stop_count; }
 
  private:
   /// A mapping of trigram to buckets.
