@@ -7,6 +7,7 @@
 
 #include <sys/types.h>
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -26,8 +27,12 @@ class VectorEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
-  // prints the vector of each document
-  void print_vector(DocumentID doc_id);
+  // prints how often a token occurs in this vector
+  void print_vector(std::vector<double> v);
+  std::vector<double> compress_vector(std::vector<double> v);
+  std::vector<double> decompress_vector(std::vector<double> v);
+  void store_vectors();
+  void load_vectors();
 
   /// key is token, value is a map of doc id to term frequency
   std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t>>
@@ -40,7 +45,7 @@ class VectorEngine : public FullTextSearchEngine {
   std::unordered_map<std::string, uint32_t> documents_per_token_;
 
   /// key is document id, value is the vector of the document
-  std::unordered_map<DocumentID, std::vector<uint32_t>> document_to_vector_;
+  std::unordered_map<DocumentID, std::vector<double>> document_to_vector_;
 };
 
 #endif  // VECTORSPACEMODELENGINE_HPP

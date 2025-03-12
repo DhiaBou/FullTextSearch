@@ -10,12 +10,24 @@
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/simpletokenizer.hpp"
 
-void VectorEngine::print_vector(DocumentID doc_id) {
+void VectorEngine::print_vector(std::vector<double> v) {
   int i = 0;
   for (const auto &[token, num_docs_with_token] : documents_per_token_) {
-    std::cout << "token index: " << i << ", token: " << token << "\n";
+    if (v[i] != 0) {
+      std::cout << token << ": " << v[i] << "; ";
+    }
+    ++i;
   }
+  std::cout << "\n";
 }
+
+std::vector<double> VectorEngine::compress_vector(std::vector<double> v) {}
+
+std::vector<double> VectorEngine::decompress_vector(std::vector<double> v) {}
+
+void VectorEngine::store_vectors() {}
+
+void VectorEngine::load_vectors() {}
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // TODO:
@@ -58,14 +70,16 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   std::unique_ptr<scoring::ScoringFunction> score_func =
       std::make_unique<scoring::TfIdf>(num_of_docs);
   for (const auto &[id, num_tokens] : tokens_per_document_) {
-    std::vector<uint32_t> vec;
+    std::vector<double> vec;
     vec.reserve(documents_per_token_.size());
     for (const auto &[token, num_docs_with_token] : documents_per_token_) {
       vec.push_back(score_func->score(
           {num_tokens}, {term_frequency_per_document_[token][id], num_docs_with_token}));
     }
     document_to_vector_.emplace(id, vec);
+    std::cout << id << "\n";
   }
+  print_vector(document_to_vector_[2]);
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
