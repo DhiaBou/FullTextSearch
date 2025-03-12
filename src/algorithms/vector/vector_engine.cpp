@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "../../scoring/tf_idf.hpp"
-#include "../../tokenizer/simpletokenizer.hpp"
+#include "../../tokenizer/stemmingtokenizer.hpp"
 
 void VectorEngine::print_vector(std::vector<double> v) {
   int i = 0;
@@ -36,7 +36,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // 3. Compute tf-idf vector for each document
   while (doc_it.hasNext()) {
     auto doc = *doc_it;
-    tokenizer::SimpleTokenizer tokenizer(doc->getData(), doc->getSize());
+    tokenizer::StemmingTokenizer tokenizer(doc->getData(), doc->getSize());
     std::unordered_set<std::string> unique_tokens_in_doc;
 
     for (auto token = tokenizer.nextToken(false); !token.empty();
