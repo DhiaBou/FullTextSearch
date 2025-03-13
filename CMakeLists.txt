@@ -40,6 +40,7 @@ add_library(fts_lib
         src/algorithms/vector/index/hnsw/hnsw_alg.hpp
         src/algorithms/vector/index/hnsw/visited_list.hpp
         src/algorithms/vector/index/hnsw/spaces/l2_space.hpp
+        src/algorithms/vector/index/hnsw/spaces/cosine_sim.hpp
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c

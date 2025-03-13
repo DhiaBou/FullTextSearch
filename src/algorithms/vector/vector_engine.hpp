@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <string>
 #include "../../fts_engine.hpp"
+#include "algorithms/vector/index/hnsw/spaces/cosine_sim.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
 #include "index/hnsw/spaces/l2_space.hpp"
 
@@ -41,7 +42,7 @@ class VectorEngine : public FullTextSearchEngine {
 
 	// TODO: Should this be a pointer?
 	hnsw::HierarchicalNSW<float>* hnsw_alg;
-	hnsw::L2Space space;
+	hnsw::CosSimSpace space;
 	std::string hnsw_path = "hnsw.bin";
 
 	uint32_t doc_count{0};
