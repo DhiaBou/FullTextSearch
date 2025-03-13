@@ -30,9 +30,9 @@ class VectorEngine : public FullTextSearchEngine {
 
  private:
   // prints how often a token occurs in this vector
-  void print_vector(std::vector<double> v);
-  std::vector<double> compress_vector(std::vector<double> v);
-  std::vector<double> decompress_vector(std::vector<double> v);
+  void print_vector(std::vector<float> values, std::vector<TermID> terms);
+  std::vector<float> compress_vector(std::vector<float> v);
+  std::vector<float> decompress_vector(std::vector<float> v);
   void store_vectors();
   void load_vectors();
 
@@ -41,7 +41,7 @@ class VectorEngine : public FullTextSearchEngine {
 
   /// key is document id, value is the vector that contains the values sparse representation of the
   /// tfidf values.
-  std::unordered_map<DocumentID, std::vector<double>> document_to_vector_;
+  std::unordered_map<DocumentID, std::vector<float>> document_to_vector_;
 
   /// key is document id, value is the vector that contains the TermIDs of the terms that this
   /// document contains

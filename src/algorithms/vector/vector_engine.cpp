@@ -10,18 +10,14 @@
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 
-void VectorEngine::print_vector(std::vector<double> v) {
-  int i = 0;
-  for (const auto &[token, num_docs_with_token] : documents_per_term_) {
-    if (v[i] != 0) {
-      std::cout << token << ": " << v[i] << "; ";
-    }
-    ++i;
+void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> contained_terms) {
+  for (int i = 0; i < contained_terms.size(); ++i) {
+    std::cout << term_id_to_term[contained_terms[i]] << ": " << values[i] << "; ";
   }
   std::cout << "\n";
 }
 
-std::vector<double> VectorEngine::decompress_vector(std::vector<double> v) {}
+std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
 
 void VectorEngine::store_vectors() {}
 
@@ -39,7 +35,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   while (doc_it.hasNext()) {
     auto doc = *doc_it;
     tokenizer::StemmingTokenizer tokenizer(doc->getData(), doc->getSize());
-    std::unordered_set<TermID> unique_tokens_in_doc;
+    std::unordered_set<TermID> unique_terms_in_doc;
 
     for (auto token = tokenizer.nextToken(false); !token.empty();
          token = tokenizer.nextToken(false)) {
@@ -49,7 +45,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
         term_to_term_id[token] = term_id_to_term.size() - 1;
       }
       TermID tid = term_to_term_id[token];
-      unique_tokens_in_doc.insert(tid);
+      unique_terms_in_doc.insert(tid);
 
       // increment the number of times a token appeared in that document
       term_frequency_per_document_[tid][doc->getId()]++;
@@ -67,13 +63,13 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
     // for every term that occurs in this document, increase the count of documents that this term
     // occurs in
-    for (auto &t : unique_tokens_in_doc) {
+    for (auto &t : unique_terms_in_doc) {
       ++documents_per_term_[t];
     }
 
     // store the terms that this document contains as part of the sparse representation of the tfidf
     // vectors
-    std::vector<uint32_t> sorted_tokens(unique_tokens_in_doc.begin(), unique_tokens_in_doc.end());
+    std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
     std::sort(sorted_tokens.begin(), sorted_tokens.end());
 
     document_to_contained_terms[doc->getId()] = std::move(sorted_tokens);
@@ -95,32 +91,23 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // iterate through all documents
   uint32_t debug_counter = 0;
   for (const auto &[doc_id, num_tokens] : terms_per_document_) {
-    std::vector<double> vec;
+    std::vector<float> vec;
     vec.reserve(document_to_contained_terms[doc_id].size());
 
     // iterate over all terms in this document
     for (const auto tid : document_to_contained_terms[doc_id]) {
-      vec.push_back(score_func->score(
+      vec.push_back((float)score_func->score(
           {num_tokens}, {term_frequency_per_document_[tid][doc_id], documents_per_term_[tid]}));
     }
 
-    // for (const auto &[token, num_docs_with_token] : documents_per_term_) {
-    //   uint32_t tf = term_frequency_per_document_[token][doc_id];
-    //   if (tf == 0) {
-    //     vec.push_back(0);
-    //   } else {
-    //     vec.push_back(score_func->score(
-    //         {num_tokens}, {term_frequency_per_document_[token][doc_id], num_docs_with_token}));
-    //   }
-    // }
     document_to_vector_[doc_id] = std::move(vec);
 
-    if (debug_counter % 1000 == 0) {
+    if (debug_counter % 10000 == 0) {
       std::cout << debug_counter << "\n";
     }
     ++debug_counter;
   }
-  print_vector(document_to_vector_[2]);
+  print_vector(document_to_vector_[2], document_to_contained_terms[2]);
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
