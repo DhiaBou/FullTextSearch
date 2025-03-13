@@ -23,7 +23,7 @@ namespace hnsw = vectorlib::hnsw;
 //---------------------------------------------------------------------------
 VectorEngine::VectorEngine(): space(dim) {
   hnsw_alg = new hnsw::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
-  std::cout << "Vector Engine Initialized" << std::endl;
+  // std::cout << "Vector Engine Initialized" << std::endl;
 }
 //---------------------------------------------------------------------------
 VectorEngine::~VectorEngine() {
@@ -151,7 +151,7 @@ static bool getEmbeddings(const char* text, size_t text_length,
     }
     
     // Text is too large, we need to chunk it
-    std::cout << "Document size " << text_length << " exceeds limit. Chunking..." << std::endl;
+    //std::cout << "Document size " << text_length << " exceeds limit. Chunking..." << std::endl;
     
     // Split text into manageable chunks
     for (size_t i = 0; i < text_length; i += MAX_CHUNK_SIZE) {
@@ -203,7 +203,7 @@ void VectorEngine::indexDocuments(std::string &data_path) {
 
         for (Document &doc : current_batch) {
           DocumentID doc_id = doc.getId();
-          std::cout << std::format("#{} - DocID {} of size {}", doc_count,  doc.getId(), doc.getSize()) << std::endl;
+          // std::cout << std::format("#{} - DocID {} of size {}", doc_count,  doc.getId(), doc.getSize()) << std::endl;
           ++doc_count;
 
           chunk_embeddings.clear();
@@ -222,7 +222,7 @@ void VectorEngine::indexDocuments(std::string &data_path) {
         current_batch = doc_it.next();
         counter += 128;
 
-        std::cout << std::format("Indexed around {} documents so far.\n", counter);
+        // std::cout << std::format("Indexed around {} documents so far.\n", counter);
       }
     });
   }
