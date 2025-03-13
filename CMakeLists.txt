@@ -8,7 +8,7 @@ find_package(Parquet REQUIRED)
 find_package(GTest REQUIRED)
 find_package(cxxopts REQUIRED)
 find_package(CURL REQUIRED)
-
+find_package(jsoncpp REQUIRED)
 
 if(APPLE)
         set(ARROW_INCLUDE_DIRS /opt/homebrew/include)
@@ -17,14 +17,7 @@ if(APPLE)
         include_directories(${PARQUET_INCLUDE_DIRS})
 endif()
 
-include(FetchContent)
-
-FetchContent_Declare(
-    fasttext
-    GIT_REPOSITORY https://github.com/facebookresearch/fastText.git
-    GIT_TAG main
-)
-FetchContent_MakeAvailable(fasttext)
+include_directories(${JSONCPP_INCLUDE_DIRS})
 
 add_library(fts_lib
         src/fts_engine.hpp
@@ -61,8 +54,8 @@ add_library(fts_lib
         src/tokenizer/tokenizer_rules.hpp
 )
 
-target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared fasttext-shared CURL::libcurl)
-target_include_directories(fts_lib PUBLIC ${fasttext_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared CURL::libcurl jsoncpp_lib)
+target_include_directories(fts_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(fts src/main.cpp)
 target_link_libraries(fts PRIVATE fts_lib)
