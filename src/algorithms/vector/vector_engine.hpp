@@ -14,6 +14,8 @@
 
 #include "../../fts_engine.hpp"
 
+using TermID = uint32_t;
+
 class VectorEngine : public FullTextSearchEngine {
  public:
   void indexDocuments(DocumentIterator it) override;
@@ -34,18 +36,21 @@ class VectorEngine : public FullTextSearchEngine {
   void store_vectors();
   void load_vectors();
 
-  /// key is token, value is a map of doc id to term frequency
-  std::unordered_map<std::string, std::unordered_map<DocumentID, uint32_t>>
-      term_frequency_per_document_;
+  /// key is term id, value is number of documents this token appears in
+  std::unordered_map<TermID, uint32_t> documents_per_term_;
 
-  /// key is document id, value is number of tokens or terms
-  std::unordered_map<DocumentID, uint32_t> tokens_per_document_;
-
-  /// key is token, value is number of documents this token appears in
-  std::unordered_map<std::string, uint32_t> documents_per_token_;
-
-  /// key is document id, value is the vector of the document
+  /// key is document id, value is the vector that contains the values sparse representation of the
+  /// tfidf values.
   std::unordered_map<DocumentID, std::vector<double>> document_to_vector_;
+
+  /// key is document id, value is the vector that contains the TermIDs of the terms that this
+  /// document contains
+  std::unordered_map<DocumentID, std::vector<TermID>> document_to_contained_terms;
+
+  std::unordered_map<std::string, TermID> term_to_term_id;
+
+  /// TODO: Only needed for debugging and testing
+  std::vector<std::string> term_id_to_term;
 };
 
 #endif  // VECTORSPACEMODELENGINE_HPP
