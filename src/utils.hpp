@@ -1,3 +1,4 @@
+#pragma once
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -6,6 +7,8 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
 //---------------------------------------------------------------------------
 namespace utils {
 //---------------------------------------------------------------------------
