@@ -8,7 +8,7 @@ echo "Recording performance data..."
 sudo perf record -F 99 -g -a -- ../cmake-build-debug/fts -d ../data/ppip -a inverted -s tf-idf
 
 
-FLAMEGRAPH_DIR="/home/dhia/Downloads/FlameGraph"
+FLAMEGRAPH_DIR=$HOME/Downloads/FlameGraph
 
 
 # Generate flamegraph
