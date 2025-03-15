@@ -20,16 +20,6 @@ class Index {
   virtual void store(std::ofstream& file) = 0;
   /// Load the underlying data structure from given data.
   virtual void load(const char* begin, const char* end) = 0;
-  /// Sets the stop count to provided value.
-  virtual void setStopCount(uint32_t stop_count) = 0;
-
- protected:
-  /// A set of trigrams that appear in a large portion of the indexed
-  /// documents and are thus ignored.
-  std::unordered_set<uint32_t> stop_trigrams;
-  /// The number of documents a trigram has to appear in to be considered
-  /// a stop trigram.
-  uint32_t stop_count;
 };
 //---------------------------------------------------------------------------
 template <typename ContainerT, uint8_t Size>
