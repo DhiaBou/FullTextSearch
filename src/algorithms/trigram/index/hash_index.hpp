@@ -208,6 +208,12 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
  private:
   /// A mapping of trigram to buckets.
   std::unordered_map<Trigram, Bucket<std::vector<DocFreq>, BucketSize>> table;
+  /// A set of trigrams that appear in a large portion of the indexed
+  /// documents and are thus ignored.
+  std::unordered_set<uint32_t> stop_trigrams;
+  /// The number of documents a trigram has to appear in to be considered
+  /// a stop trigram.
+  uint32_t stop_count;
 };
 //---------------------------------------------------------------------------
 }  // namespace trigramlib

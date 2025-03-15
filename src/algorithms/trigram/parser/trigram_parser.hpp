@@ -28,6 +28,8 @@ constexpr std::array<bool, 128> generateWhitelist() {
   return whitelist;
 };
 //---------------------------------------------------------------------------
+constexpr uint32_t kNumPossibleTrigrams = 41 * 41 * 41 * kMaxWordOffset;
+//---------------------------------------------------------------------------
 class TrigramParser {
  public:
   /// Constructor

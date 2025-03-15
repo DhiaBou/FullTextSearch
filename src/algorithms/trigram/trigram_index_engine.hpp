@@ -4,7 +4,9 @@
 #include "../../documents/document_iterator.hpp"
 #include "../../fts_engine.hpp"
 #include "index/hash_index.hpp"
+#include "index/parallel_hash_index.hpp"
 #include "models/trigram.hpp"
+#include "parser/trigram_parser.hpp"
 //---------------------------------------------------------------------------
 class TrigramIndexEngine : public FullTextSearchEngine {
  public:
@@ -25,24 +27,25 @@ class TrigramIndexEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
-  /// @brief Merges given indexes into one.
-  /// To be precise, merges the given indexes into the one located at index 0.
-  /// @param indexes The indexes to be merged.
-  void merge(std::vector<trigramlib::HashIndex<16>> &indexes);
+  /// @brief Merges given doc_to_length maps into one.
+  /// To be precise, merges the given maps into the doc_to_length vector.
+  /// @param maps The maps to be merged.
+  void merge(std::vector<std::unordered_map<DocumentID, uint32_t>> &maps);
   /// @brief Consumes documents and writes trigrams into the index.
   /// @param doc_it The iterator to consume the documents from.
-  /// @param local_index The index to write the trigrams into.
   /// @param local_doc_to_length The index to store the number of trigrams per document.
   /// @return The total number of found trigrams.
-  uint64_t consumeDocuments(DocumentIterator &doc_it, trigramlib::HashIndex<16> &local_index,
+  uint64_t consumeDocuments(DocumentIterator &doc_it,
                             std::unordered_map<DocumentID, uint32_t> &local_doc_to_length);
 
   /// The underlying index.
-  trigramlib::HashIndex<16> index;
+  trigramlib::ParallelHashIndex<trigramlib::kNumPossibleTrigrams, trigramlib::kMaxWordOffset> index;
   /// The number of indexed documents.
   std::atomic<uint32_t> doc_count;
-  /// A map from document ID to document length in trigrams.
-  std::unordered_map<DocumentID, uint32_t> doc_to_length;
+  /// A mapping from document ID (index) to document length in trigrams.
+  /// Note: We make use of the fact that document IDs are increasing consecutively,
+  /// starting at 1.
+  std::vector<uint32_t> doc_to_length;
   /// The average document length in trigrams.
   double avg_doc_length;
 };

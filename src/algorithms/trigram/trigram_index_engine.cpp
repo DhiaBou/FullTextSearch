@@ -8,7 +8,6 @@
 #include "../../tokenizer/simpletokenizer.hpp"
 #include "../../utils.hpp"
 #include "models/trigram.hpp"
-#include "parser/trigram_parser.hpp"
 #include "trigram_index_engine.hpp"
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::indexDocuments(std::string& data_path) {
@@ -17,25 +16,25 @@ void TrigramIndexEngine::indexDocuments(std::string& data_path) {
 
   auto thread_count = std::thread::hardware_concurrency();
   std::vector<std::thread> threads;
-  std::vector<trigramlib::HashIndex<16>> local_indexes(thread_count);
   std::vector<std::unordered_map<DocumentID, uint32_t>> local_doc_to_lengths(thread_count);
 
   // diverge
   for (size_t i = 0; i < thread_count; ++i) {
-    threads.push_back(std::thread([this, &doc_it, &total_trigram_count, &local_indexes,
-                                   &local_doc_to_lengths, i]() {
-      total_trigram_count += consumeDocuments(doc_it, local_indexes[i], local_doc_to_lengths[i]);
-    }));
+    threads.push_back(
+        std::thread([this, &doc_it, &total_trigram_count, &local_doc_to_lengths, i]() {
+          total_trigram_count += consumeDocuments(doc_it, local_doc_to_lengths[i]);
+        }));
   }
   for (auto& t : threads) {
     t.join();
   }
 
   // merge
-  merge(local_indexes);
-  index = std::move(local_indexes[0]);
-  utils::merge<DocumentID>(local_doc_to_lengths);
-  doc_to_length = std::move(local_doc_to_lengths[0]);
+  merge(local_doc_to_lengths);
+
+  // compactify
+  // TODO: Come up with a better compactification factor
+  index.compactify(doc_count / 10);
 
   avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
 }
@@ -108,8 +107,9 @@ void TrigramIndexEngine::store(const std::string& path) {
   file.write(reinterpret_cast<const char*>(&avg_doc_length), sizeof(avg_doc_length));
   auto map_size = static_cast<uint32_t>(doc_to_length.size());
   file.write(reinterpret_cast<const char*>(&map_size), sizeof(map_size));
-  for (const auto& [doc_id, length] : doc_to_length) {
-    file.write(reinterpret_cast<const char*>(&doc_id), sizeof(doc_id));
+  for (uint32_t i = 1; i < doc_to_length.size(); ++i) {
+    file.write(reinterpret_cast<const char*>(&i), sizeof(i));
+    auto length = doc_to_length[i];
     file.write(reinterpret_cast<const char*>(&length), sizeof(length));
   }
 
@@ -145,28 +145,28 @@ void TrigramIndexEngine::load(const std::string& path) {
   index.load(it, end);
 }
 //---------------------------------------------------------------------------
-void TrigramIndexEngine::merge(std::vector<trigramlib::HashIndex<16>>& indexes) {
-  // TODO: Make multi-threaded
-  // TODO: Make stop_count parametrizable
+void TrigramIndexEngine::merge(std::vector<std::unordered_map<DocumentID, uint32_t>>& maps) {
+  doc_to_length.resize(doc_count + 1);
 
-  // In the merge phase, the number of documents is known and can thus be used
-  // for the stop count.
-  uint32_t stop_count = doc_count / 5;
+  auto thread_count = std::thread::hardware_concurrency();
+  assert(maps.size() == thread_count);
 
-  auto& main_index = indexes[0];
-  main_index.setStopCount(stop_count);
-  for (size_t i = 1; i < indexes.size(); ++i) {
-    for (auto& [trigram, bucket] : indexes[i]) {
-      for (const auto& doc_freq : bucket) {
-        main_index.insert(trigram, doc_freq);
+  std::vector<std::thread> threads;
+  for (size_t i = 0; i < thread_count; ++i) {
+    threads.push_back(std::thread([this, &maps, i]() {
+      for (const auto& [doc_id, length] : maps[i]) {
+        doc_to_length[doc_id] = length;
       }
-    }
+    }));
+  }
+
+  for (auto& t : threads) {
+    t.join();
   }
 }
 //---------------------------------------------------------------------------
 uint64_t TrigramIndexEngine::consumeDocuments(
-    DocumentIterator& doc_it, trigramlib::HashIndex<16>& local_index,
-    std::unordered_map<DocumentID, uint32_t>& local_doc_to_length) {
+    DocumentIterator& doc_it, std::unordered_map<DocumentID, uint32_t>& local_doc_to_length) {
   uint64_t local_trigram_count = 0;
   uint32_t local_doc_count = 0;
 
@@ -192,7 +192,7 @@ uint64_t TrigramIndexEngine::consumeDocuments(
 
       // Insert into index
       for (const auto& [raw_trigram, count] : trigram_occurences) {
-        local_index.insert(trigramlib::Trigram(raw_trigram), {doc.getId(), count});
+        index.insert(trigramlib::Trigram(raw_trigram), {doc.getId(), count});
       }
 
       // Update statistics

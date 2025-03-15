@@ -1,3 +1,6 @@
+#ifndef FTS_UTILS_HPP
+#define FTS_UTILS_HPP
+//---------------------------------------------------------------------------
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -42,19 +45,39 @@ class FileReader {
 };
 //---------------------------------------------------------------------------
 /**
- * @brief A utility to merge multiple unordered maps into a single one.
- * To be precise, merges the given maps into the one located at index 0.
- * @param maps The maps to be merged.
+ *  Bithack from:
+ *  https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
-template <typename K>
-void merge(std::vector<std::unordered_map<K, uint32_t>> &maps) {
-  if (maps.empty()) return;
-  auto &main_index = maps[0];
-  for (size_t i = 1; i < maps.size(); ++i) {
-    for (auto &[key, value] : maps[i]) {
-      main_index[key] += value;
-    }
-  }
+static constexpr uint64_t nextPowerOf2(uint64_t v) {
+  v--;
+  v |= v >> 1;
+  v |= v >> 2;
+  v |= v >> 4;
+  v |= v >> 8;
+  v |= v >> 16;
+  v |= v >> 32;
+  v++;
+  return v;
+}
+//---------------------------------------------------------------------------
+/**
+ *  MurmurHash64A
+ */
+static constexpr uint64_t mm_hash(uint64_t k) {
+  const uint64_t m = 0xc6a4a7935bd1e995;
+  const int r = 47;
+  uint64_t h = 0x8445d61a4e774912 ^ (8 * m);
+  k *= m;
+  k ^= k >> r;
+  k *= m;
+  h ^= k;
+  h *= m;
+  h ^= h >> r;
+  h *= m;
+  h ^= h >> r;
+  return h;
 }
 //---------------------------------------------------------------------------
 }  // namespace utils
+//---------------------------------------------------------------------------
+#endif  // FTS_UTILS_HPP
