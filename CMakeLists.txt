@@ -8,6 +8,8 @@ find_package(Parquet REQUIRED)
 find_package(GTest REQUIRED)
 find_package(cxxopts REQUIRED)
 
+include_directories(${CMAKE_SOURCE_DIR}/src/algorithms/trigram)
+
 if(APPLE)
         set(ARROW_INCLUDE_DIRS /opt/homebrew/include)
         set(ARROW_LIB_DIRS /opt/homebrew/lib)
@@ -17,6 +19,7 @@ endif()
 
 add_library(fts_lib
         src/fts_engine.hpp
+        src/utils.hpp
         src/documents/document.hpp
         src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
@@ -29,6 +32,12 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
+        src/algorithms/trigram/index/index.hpp
+        src/algorithms/trigram/index/hash_index.hpp
+        src/algorithms/trigram/models/doc_freq.hpp
+        src/algorithms/trigram/models/trigram.hpp
+        src/algorithms/trigram/parser/trigram_parser.hpp
+        src/algorithms/trigram/parser/trigram_parser.cpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/algorithms/vsm/vector_space_model_engine.hpp
         src/tokenizer/snowball/api.h
