@@ -33,6 +33,7 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
+        src/algorithms/trigram/data-structures/parallel_hash_table.hpp
         src/algorithms/trigram/index/index.hpp
         src/algorithms/trigram/index/hash_index.hpp
         src/algorithms/trigram/models/doc_freq.hpp
