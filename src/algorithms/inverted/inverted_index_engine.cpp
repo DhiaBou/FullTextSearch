@@ -39,8 +39,13 @@ void InvertedIndexEngine::indexDocuments(std::string &data_path) {
     }
   };
 
+  unsigned int num_threads = std::thread::hardware_concurrency();
+  if (num_threads == 0) {
+    num_threads = 4;
+  }
+
   std::vector<std::thread> threads;
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < num_threads; i++) {
     threads.push_back(std::thread{index_batches});
   }
   for (auto &thread : threads) {
