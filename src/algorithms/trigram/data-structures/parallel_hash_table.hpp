@@ -1,7 +1,6 @@
 #ifndef PARALLEL_HASH_MAP_HPP
 #define PARALLEL_HASH_MAP_HPP
 //---------------------------------------------------------------------------
-#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
