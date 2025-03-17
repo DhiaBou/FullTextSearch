@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 //---------------------------------------------------------------------------
+#include <atomic>
 #include <charconv>
 #include <cstdint>
 #include <string>
