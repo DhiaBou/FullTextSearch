@@ -14,7 +14,7 @@ class ParallelHashTable {
  public:
   //---------------------------------------------------------------------------
   using Chain = std::vector<std::pair<Key, Value>>;
-  using Bucket = std::pair<Chain, std::mutex>;
+  using Bucket = std::pair<Chain, utils::SpinLock>;
   using Table = std::array<Bucket, utils::nextPowerOf2(TableSize)>;
   //---------------------------------------------------------------------------
   class TableIterator {
