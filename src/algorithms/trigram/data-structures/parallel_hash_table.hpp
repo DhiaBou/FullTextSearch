@@ -67,18 +67,6 @@ class ParallelHashTable {
     return *this;
   }
   /**
-   * Inserts the key value pair.
-   * Threadsafe with concurrent inserts/updates
-   * Not Threadsafe with concurrent reads
-   * @param key Key
-   * @param value Value
-   */
-  void insert(const Key key, const Value value) {
-    auto& cur = table[hash(key)];
-    std::unique_lock lck(cur.second);
-    cur.first.push_back({key, value});
-  }
-  /**
    * Threadsafe with concurrent reads
    * Not Threadsafe with concurrent inserts/updates
    * @param key Key of the Key-Value-Pair
@@ -118,21 +106,6 @@ class ParallelHashTable {
     update(default_value);
     cur.first.push_back({key, default_value});
   }
-  /**
-   *
-   * @param key Key
-   * @return Iterator pointing to the Key,Value pair if it does not exist the end iterator is
-   * returned
-   */
-  TableIterator find(const Key& key) {
-    auto cur = table.begin() + hash(key);
-    for (auto it = cur->first.begin(); it != cur->first.end(); ++it) {
-      if (it->first == key) {
-        return Iterator(cur, table.end(), it);
-      }
-    }
-    return end();
-  }
   /// The hash function for provided key on the table.
   size_t hash(const Key& k) const { return utils::mm_hash(k) & table_mask; }
   /// The begin-iterator for the hash table.
@@ -145,6 +118,26 @@ class ParallelHashTable {
   }
   /// The size of the hash table.
   uint32_t size() { return table.size(); }
+  /// The memory footprint of the hash table.
+  uint64_t footprint() {
+    // Note: This function only includes information on the memory footprint
+    // that is known at compile time. Any other dynamically allocated memory
+    // by key or value must be determined by the instantiating client.
+    uint64_t size = 0;
+
+    // Metadata
+    size += sizeof(table_mask);
+    // Table
+    size += sizeof(table);
+    for (size_t i = 0; i < table.size(); ++i) {
+      for (const auto& [key, value] : table[i].first) {
+        size += sizeof(key);
+        size += sizeof(value);
+      }
+    }
+
+    return size;
+  }
 
  private:
   Table table;

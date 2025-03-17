@@ -203,6 +203,10 @@ class HashIndex : public Index<DocFreq, std::vector<DocFreq>, BucketSize> {
     }
   }
   //---------------------------------------------------------------------------
+  uint64_t footprint() override {
+    // TODO
+  }
+  //---------------------------------------------------------------------------
   void setStopCount(uint32_t stop_count) override { this->stop_count = stop_count; }
 
  private:
