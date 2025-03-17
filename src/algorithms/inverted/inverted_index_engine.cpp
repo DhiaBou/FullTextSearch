@@ -136,6 +136,11 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
   return top_documents;
 }
 
+uint64_t InvertedIndexEngine::footprint() {
+  // TODO
+  return 0;
+}
+
 uint32_t InvertedIndexEngine::getDocumentCount() { return tokens_per_document_.size(); }
 
 double InvertedIndexEngine::getAvgDocumentLength() {
