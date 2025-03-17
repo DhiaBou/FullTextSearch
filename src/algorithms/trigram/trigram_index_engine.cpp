@@ -1,6 +1,5 @@
 #include <cassert>
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -29,14 +28,15 @@ void TrigramIndexEngine::indexDocuments(std::string& data_path) {
     t.join();
   }
 
+  avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
+
   // merge
   merge(local_doc_to_lengths);
 
   // compactify
-  // TODO: Come up with a better compactification factor
-  index.compactify(doc_count / 10);
-
-  avg_doc_length = static_cast<double>(total_trigram_count) / static_cast<double>(doc_count);
+  uint32_t stop_share =
+      std::clamp(static_cast<uint32_t>(doc_count / (avg_doc_length + 1)), 2U, 10U);
+  index.compactify(doc_count / stop_share);
 }
 //---------------------------------------------------------------------------
 std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
