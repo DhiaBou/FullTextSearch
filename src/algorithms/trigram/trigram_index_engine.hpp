@@ -20,8 +20,8 @@ class TrigramIndexEngine : public FullTextSearchEngine {
   void store(const std::string &path);
   /// Load the index from specified location.
   void load(const std::string &path);
-  /// Determines the memory footprint of the engine in Bytes.
-  uint64_t footprint();
+  /// Determines the memory footprint of the engine in bytes.
+  uint64_t footprint() override;
 
   /// Get the number of documents.
   uint32_t getDocumentCount() override;
