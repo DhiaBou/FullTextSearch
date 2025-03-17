@@ -145,6 +145,20 @@ void TrigramIndexEngine::load(const std::string& path) {
   index.load(it, end);
 }
 //---------------------------------------------------------------------------
+uint64_t TrigramIndexEngine::footprint() {
+  uint64_t size = 0;
+
+  // Metadata
+  size += sizeof(doc_count);
+  size += sizeof(avg_doc_length);
+  size += sizeof(doc_to_length) + doc_to_length.size() * sizeof(uint32_t);
+
+  // Index
+  size += index.footprint();
+
+  return size;
+}
+//---------------------------------------------------------------------------
 void TrigramIndexEngine::merge(std::vector<std::unordered_map<DocumentID, uint32_t>>& maps) {
   doc_to_length.resize(doc_count + 1);
 
