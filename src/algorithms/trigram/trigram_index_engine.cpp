@@ -69,15 +69,25 @@ std::vector<std::pair<DocumentID, double>> TrigramIndexEngine::search(
     }
   }
 
-  // Order by score
-  std::vector<std::pair<DocumentID, double>> ordered_docs(doc_to_score.begin(), doc_to_score.end());
-  std::sort(ordered_docs.begin(), ordered_docs.end(),
-            [](const auto& a, const auto& b) { return a.second > b.second; });
+  // Build MinHeap on score
+  std::priority_queue<std::pair<double, uint32_t>, std::vector<std::pair<double, uint32_t>>,
+                      std::greater<>>
+      ordered_docs;
+
+  for (const auto& [doc_id, score] : doc_to_score) {
+    if (ordered_docs.size() < num_results) {
+      ordered_docs.emplace(score, doc_id);
+    } else if (score > ordered_docs.top().first) {
+      ordered_docs.pop();
+      ordered_docs.emplace(score, doc_id);
+    }
+  }
 
   // Extract top results
-  std::vector<std::pair<DocumentID, double>> results;
-  for (size_t i = 0; i < num_results && i < ordered_docs.size(); ++i) {
-    results.push_back(ordered_docs[i]);
+  std::vector<std::pair<DocumentID, double>> results{ordered_docs.size()};
+  for (int i = static_cast<int>(ordered_docs.size()) - 1; i >= 0; i--) {
+    results[i] = {ordered_docs.top().second, ordered_docs.top().first};
+    ordered_docs.pop();
   }
 
   return results;
