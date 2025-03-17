@@ -64,7 +64,6 @@ class ParallelHashIndex : public Index<DocFreq, std::vector<DocFreq>, MaxOffset>
     for (auto& [key, value] : table) {
       if (value.size() > max_occurences) {
         value.clear();
-        value.shrink_to_fit();
       }
     }
   }
