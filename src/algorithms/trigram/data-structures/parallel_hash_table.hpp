@@ -37,9 +37,7 @@ class ParallelHashTable {
       return *this;
     }
     /// Equality Operator.
-    bool operator==(const TableIterator& other) const {
-      return cur_outer == other.cur_outer && cur_inner == other.cur_inner;
-    }
+    bool operator==(const TableIterator& other) const { return cur_outer == other.cur_outer; }
     /// Inequality Operator.
     bool operator!=(const TableIterator& other) const { return !(*this == other); }
 
