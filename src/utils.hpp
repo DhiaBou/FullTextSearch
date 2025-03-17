@@ -45,6 +45,25 @@ class FileReader {
 };
 //---------------------------------------------------------------------------
 /**
+ * Implementation from:
+ * https://en.cppreference.com/w/cpp/atomic/atomic_flag
+ */
+class SpinLock {
+ public:
+  void lock() noexcept {
+    while (flag.test_and_set(std::memory_order_acquire)) flag.wait(true, std::memory_order_relaxed);
+  }
+  bool try_lock() noexcept { return !flag.test_and_set(std::memory_order_acquire); }
+  void unlock() noexcept {
+    flag.clear(std::memory_order_release);
+    flag.notify_one();
+  }
+
+ private:
+  std::atomic_flag flag{};
+};
+//---------------------------------------------------------------------------
+/**
  *  Bithack from:
  *  https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
