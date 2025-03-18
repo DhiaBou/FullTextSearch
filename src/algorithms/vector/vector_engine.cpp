@@ -10,6 +10,18 @@
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 
+namespace hnsw = vectorlib::hnsw;
+
+VectorEngine::VectorEngine() : space(dim, document_to_vector_, document_to_contained_terms_) {
+  hnsw_alg = new hnsw::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
+  // std::cout << "Vector Engine Initialized" << std::endl;
+}
+
+VectorEngine::~VectorEngine() {
+  // hnsw_alg->saveIndex("hnswIndex.bin");
+  delete hnsw_alg;
+}
+
 void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> contained_terms) {
   for (int i = 0; i < contained_terms.size(); ++i) {
     std::cout << term_id_to_term[contained_terms[i]] << ": " << values[i] << "; ";
@@ -17,7 +29,7 @@ void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> c
   std::cout << "\n";
 }
 
-std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
+// std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
 
 void VectorEngine::store_vectors() {}
 
@@ -72,7 +84,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
     std::sort(sorted_tokens.begin(), sorted_tokens.end());
 
-    document_to_contained_terms[doc->getId()] = std::move(sorted_tokens);
+    document_to_contained_terms_[doc->getId()] = std::move(sorted_tokens);
 
     // std::cout << documents_per_token_.size() << "\n";
 
@@ -92,10 +104,10 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   uint32_t debug_counter = 0;
   for (const auto &[doc_id, num_tokens] : terms_per_document_) {
     std::vector<float> vec;
-    vec.reserve(document_to_contained_terms[doc_id].size());
+    vec.reserve(document_to_contained_terms_[doc_id].size());
 
     // iterate over all terms in this document
-    for (const auto tid : document_to_contained_terms[doc_id]) {
+    for (const auto tid : document_to_contained_terms_[doc_id]) {
       vec.push_back((float)score_func->score(
           {num_tokens}, {term_frequency_per_document_[tid][doc_id], documents_per_term_[tid]}));
     }
@@ -107,7 +119,12 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     }
     ++debug_counter;
   }
-  print_vector(document_to_vector_[2], document_to_contained_terms[2]);
+  print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
+
+  // insert vectors into hnsw
+  for (const auto &[doc_id, _] : document_to_contained_terms_) {
+    hnsw_alg->addPoint(&doc_id, doc_id);
+  }
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(

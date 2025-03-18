@@ -36,42 +36,6 @@ static float L2Sqr(const void* pVect1, const void* pVect2, const void* pQty) {
   return res;
 }
 
-static float L2Sqr(DocumentID docid1, DocumentID docid2,
-                   std::unordered_map<DocumentID, std::vector<TermID>>& document_to_contained_terms,
-                   std::unordered_map<DocumentID, std::vector<float>>& document_to_vector_,
-                   const void* pVect2, const void* pQty) {
-  TermID* terms1 = document_to_contained_terms[docid1].data();
-  TermID* terms2 = document_to_contained_terms[docid2].data();
-  float* values1 = document_to_vector_[docid1].data();
-  float* values2 = document_to_vector_[docid2].data();
-
-  float res = 0;
-  while (condition) {
-    // [1, 7, 19] I love you
-    // [1, 7, 25] I love pizza
-    if (terms1 == terms2) {
-      float t = *values1 - *values2;
-      res += t * t;
-
-      ++values1;
-      ++values2;
-      ++terms1;
-      ++terms2;
-    } else if (terms1 < terms2) {
-      float t = *values1;
-      res += t * t;
-      ++terms1;
-      ++values1;
-    } else {
-      float t = *values2;
-      res += t * t;
-      ++terms2;
-      ++values2;
-    }
-  }
-
-  return res;
-}
 //--------------------------------------------------------------------------------------------------
 class L2Space : public SpaceInterface<float> {
  public:
