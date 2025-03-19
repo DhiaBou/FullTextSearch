@@ -51,6 +51,8 @@ class VectorEngine : public FullTextSearchEngine {
   // std::vector<float> compress_vector(std::vector<float> v);
   // std::vector<float> decompress_vector(std::vector<float> v);
   void store_vectors();
+  void store_documents_per_term();
+  void load_documents_per_term();
   void load_vectors();
 
   /// key is term id, value is number of documents this token appears in

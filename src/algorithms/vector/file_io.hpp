@@ -8,17 +8,16 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <string>
 
-class MmapedFile {
+class MmapedFileWriter {
  public:
-  MmapedFile(const char *path, size_t intermediate_size) : current_max_size(intermediate_size) {
+  MmapedFileWriter(const char *path, size_t initial_max_size) : current_max_size(initial_max_size) {
     // open the file
     this->file_descriptor = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (file_descriptor < 0) exit(1);
 
     // set file size of the mapped file to intermediate_size
-    if (ftruncate(file_descriptor, intermediate_size)) {
+    if (ftruncate(file_descriptor, initial_max_size)) {
       std::cout << "setting the intermediate file size did not work.\n";
       close(file_descriptor);
       exit(1);
@@ -26,10 +25,10 @@ class MmapedFile {
 
     // map the specified file into memory
     data = static_cast<char *>(
-        mmap(nullptr, intermediate_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0));
+        mmap(nullptr, initial_max_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0));
   };
 
-  ~MmapedFile() {
+  ~MmapedFileWriter() {
     // flush the data to disk
     msync(data, current_max_size, MS_SYNC);
 
@@ -47,13 +46,15 @@ class MmapedFile {
   // const char *begin() const { return data; }
   // const char *end() const { return data + actual_file_size; }
 
-  void write(const std::string &s) {
-    if (consumed_size + s.length() > current_max_size) {
-      size_t new_max_size = current_max_size * 1.3;
+  void write(const char *c, size_t size) {
+    if (consumed_size + size > current_max_size) {
+      size_t new_max_size = (current_max_size * 2 > consumed_size + size)
+                                ? current_max_size * 2
+                                : current_max_size * 2 + size;
       resize(new_max_size);
     }
-    memcpy(this->data + this->consumed_size, s.data(), s.length());
-    this->consumed_size += s.length();
+    memcpy(this->data + this->consumed_size, c, size);
+    this->consumed_size += size;
   }
 
  private:
@@ -76,4 +77,28 @@ class MmapedFile {
         mmap(nullptr, current_max_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0));
     std::cout << "successfully resized to " << current_max_size << ".\n";
   }
+};
+
+class MmapedFileReader {
+ public:
+  MmapedFileReader(std::string &path) {
+    this->file_descriptor = open(path.c_str(), O_RDONLY);
+
+    if (file_descriptor < 0) exit(1);
+
+    lseek(file_descriptor, 0, SEEK_END);
+    size = lseek(file_descriptor, 0, SEEK_CUR);
+    data = static_cast<char *>(mmap(nullptr, size, PROT_READ, MAP_SHARED, file_descriptor, 0));
+  };
+  ~MmapedFileReader() {
+    munmap(data, size);
+    close(file_descriptor);
+  }
+  const char *begin() const { return data; }
+  const char *end() const { return data + size; }
+
+ private:
+  int file_descriptor;
+  size_t size;
+  char *data;
 };

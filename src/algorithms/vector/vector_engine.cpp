@@ -32,8 +32,47 @@ void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> c
 
 // std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
 
-void VectorEngine::store_vectors() {}
+void VectorEngine::store_documents_per_term() {
+  std::vector<uint32_t> v;
+  v.reserve(documents_per_term_.size() * 2);
+  for (const auto &[tid, num_docs] : documents_per_term_) {
+    v.push_back(tid);
+    v.push_back(num_docs);
+  }
+  std::string documents_per_term_fname = "documents_per_term";
+  MmapedFileWriter dpt(documents_per_term_fname.c_str(), v.size() * sizeof(uint32_t));
+  dpt.write(reinterpret_cast<const char *>(v.data()), v.size() * 8);
+}
 
+void VectorEngine::store_vectors() {
+  store_documents_per_term();
+
+  // TODO: for the other vectors, store the size directly after the id, then you can just memcpy it
+  // completely.
+  // TODO: since TermID and DocumentID are consecutive, don't use a hashmap, but just a vector.
+  // Preallocate their sizes.
+
+  // size_t initial_max_size = 1024L * 1024;
+  // std::string document_to_vector_fname = "document_to_vector.csv";
+  // std::string document_to_contained_terms_fname = "document_to_contained_terms.csv";
+  // std::string term_to_term_id_fname = "term_to_term_id.csv";
+  // std::string term_id_to_term_fname = "term_id_to_term.csv";
+
+  // // create mmaped files
+  // MmapedFile dtv(document_to_vector_fname.c_str(), initial_max_size);
+  // MmapedFile dtct(document_to_contained_terms_fname.c_str(), initial_max_size);
+  // MmapedFile ttti(term_to_term_id_fname.c_str(), initial_max_size);
+  // MmapedFile titt(term_id_to_term_fname.c_str(), initial_max_size);
+}
+
+void VectorEngine::load_documents_per_term() {
+  std::string dpt_fname = "documents_per_term";
+  MmapedFileReader dpt_reader(dpt_fname);
+  for (const char *d = dpt_reader.begin(); d < dpt_reader.end(); d += sizeof(uint32_t) * 2) {
+    documents_per_term_[*(reinterpret_cast<const uint32_t *>(d))] =
+        *reinterpret_cast<const uint32_t *>(d + sizeof(uint32_t));
+  }
+}
 void VectorEngine::load_vectors() {}
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
@@ -52,7 +91,8 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
     for (auto token = tokenizer.nextToken(false); !token.empty();
          token = tokenizer.nextToken(false)) {
-      // if this is the first time this term was discoverd over all documents, give it a new TermID
+      // if this is the first time this term was discoverd over all documents, give it a new
+      // TermID
       if (term_to_term_id.find(token) == term_to_term_id.end()) {
         term_id_to_term.push_back(token);
         term_to_term_id[token] = term_id_to_term.size() - 1;
@@ -80,8 +120,8 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       ++documents_per_term_[t];
     }
 
-    // store the terms that this document contains as part of the sparse representation of the tfidf
-    // vectors
+    // store the terms that this document contains as part of the sparse representation of the
+    // tfidf vectors
     std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
     std::sort(sorted_tokens.begin(), sorted_tokens.end());
 
