@@ -51,9 +51,6 @@ void InvertedIndexEngine::indexDocuments(std::string &data_path) {
   for (auto &thread : threads) {
     thread.join();
   }
-
-  std::cout << term_frequency_per_document_.size() << "\n";
-  std::cout << tokens_per_document_.size() << "\n";
 }
 
 double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {
@@ -70,9 +67,9 @@ double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &
   }
 
   uint32_t tf = it->second;
-  uint32_t totalTokens = tokens_per_document_.get(docId).value();
+  uint32_t totalTokens = *tokens_per_document_.get(docId);
   uint32_t docsContainingToken = freqMap.size();
-  uint32_t totalDocs = tokens_per_document_.size();
+  uint32_t totalDocs = 0;  // tokens_per_document_.size();
 
   if (totalTokens == 0 || docsContainingToken == 0 || totalDocs == 0) {
     return 0.0;
@@ -148,7 +145,7 @@ double InvertedIndexEngine::getAvgDocumentLength() {
     return average_doc_length_;
   }
   average_doc_length_ =
-      tokens_per_document_.empty()
+      true  // tokens_per_document_.empty()
           ? 0.0
           : static_cast<double>(std::accumulate(
                 tokens_per_document_.begin(), tokens_per_document_.end(), 0ull,

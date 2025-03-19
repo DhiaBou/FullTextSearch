@@ -5,7 +5,7 @@
 #ifndef INVERTED_INDEX_ENGINE_HPP
 #define INVERTED_INDEX_ENGINE_HPP
 
-#include "../../datastructures/parallel_unordered_map.hpp"
+#include "../../data-structures/parallel_hash_table.hpp"
 #include "../../fts_engine.hpp"
 
 struct Token;
@@ -29,11 +29,11 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double average_doc_length_ = -1.0;
 
   /// key is token, value is a map of doc id to term frequency
-  ParallelUnorderedMap<std::string, std::unordered_map<DocumentID, uint32_t>, 1024 * 1024 * 6>
-      term_frequency_per_document_;
+  ParallelHashTable<std::string, std::unordered_map<DocumentID, uint32_t>>
+      term_frequency_per_document_{1};
 
   /// key is document id, value is number of tokens or terms
-  ParallelUnorderedMap<DocumentID, uint32_t, 524288> tokens_per_document_;
+  ParallelHashTable<DocumentID, uint32_t> tokens_per_document_{1};
 };
 
 #endif  // INVERTED_INDEX_ENGINE_HPP

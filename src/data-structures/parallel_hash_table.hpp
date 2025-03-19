@@ -1,20 +1,34 @@
 #ifndef PARALLEL_HASH_MAP_HPP
 #define PARALLEL_HASH_MAP_HPP
 //---------------------------------------------------------------------------
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <vector>
 //---------------------------------------------------------------------------
-#include "../../utils.hpp"
+#include "../utils.hpp"
 //---------------------------------------------------------------------------
-template <typename Key, typename Value, size_t TableSize>
+template <typename T>
+struct Hasher;
+//---------------------------------------------------------------------------
+template <>
+struct Hasher<uint32_t> {
+  size_t operator()(uint32_t key) const { return utils::mm_hash(key); }
+};
+//---------------------------------------------------------------------------
+template <>
+struct Hasher<std::string> {
+  size_t operator()(const std::string& key) const { return std::hash<std::string>{}(key); }
+};
+//---------------------------------------------------------------------------
+template <typename Key, typename Value>
 class ParallelHashTable {
  public:
   //---------------------------------------------------------------------------
   using Chain = std::vector<std::pair<Key, Value>>;
   using Bucket = std::pair<Chain, utils::SpinLock>;
-  using Table = std::array<Bucket, utils::nextPowerOf2(TableSize)>;
+  using Table = std::deque<Bucket>;
   //---------------------------------------------------------------------------
   class TableIterator {
    public:
@@ -55,13 +69,25 @@ class ParallelHashTable {
   };
   //---------------------------------------------------------------------------
   /// Default Constructor.
-  ParallelHashTable() : table_mask(table.size() - 1) {}
+  ParallelHashTable() = delete;
+  /// Constructor.
+  explicit ParallelHashTable(uint64_t size) {
+    uint64_t table_size = utils::nextPowerOf2(size);
+    table.resize(table_size);
+    table_mask = table_size - 1;
+  }
+  /// Copy Constructor.
+  ParallelHashTable(const ParallelHashTable&) = delete;
+  /// Copy assigment.
+  ParallelHashTable& operator=(const ParallelHashTable&) = delete;
   /// Move Constructor.
-  ParallelHashTable(ParallelHashTable&& other) noexcept : table(std::move(other.table)) {}
+  ParallelHashTable(ParallelHashTable&& other) noexcept
+      : table(std::move(other.table)), table_mask(other.table_mask) {}
   /// Move assignment.
   ParallelHashTable& operator=(ParallelHashTable&& other) noexcept {
     if (this != &other) {
       table = std::move(other.table);
+      table_mask = other.table_mask;
     }
     return *this;
   }
@@ -79,6 +105,21 @@ class ParallelHashTable {
       }
     }
     return nullptr;
+  }
+  /**
+   *
+   * @param key Key
+   * @return Iterator pointing to the Key,Value pair if it does not exist the end iterator is
+   * returned
+   */
+  TableIterator find(const Key& key) {
+    auto cur = table.begin() + hash(key);
+    for (auto it = cur->first.begin(); it != cur->first.end(); ++it) {
+      if (it->first == key) {
+        return TableIterator(cur, table.end(), it);
+      }
+    }
+    return end();
   }
   /**
    * Updates the value of the corresponding key using the update Functor.
@@ -106,7 +147,7 @@ class ParallelHashTable {
     cur.first.push_back({key, default_value});
   }
   /// The hash function for provided key on the table.
-  size_t hash(const Key& k) const { return utils::mm_hash(k) & table_mask; }
+  size_t hash(const Key& k) const { return Hasher<Key>{}(k)&table_mask; }
   /// The begin-iterator for the hash table.
   TableIterator begin() {
     return TableIterator(table.begin(), table.end(), table.begin()->first.begin());
@@ -127,7 +168,7 @@ class ParallelHashTable {
     // Metadata
     size += sizeof(table_mask);
     // Table
-    size += sizeof(table);
+    size += table.size() * sizeof(Bucket);
     for (size_t i = 0; i < table.size(); ++i) {
       for (const auto& [key, value] : table[i].first) {
         size += sizeof(key);

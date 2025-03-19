@@ -23,6 +23,7 @@ add_library(fts_lib
         src/documents/document.hpp
         src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
+        src/data-structures/parallel_hash_table.hpp
         src/scoring/scoring_function.hpp
         src/scoring/bm25.hpp
         src/scoring/bm25.cpp
@@ -32,7 +33,6 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
-        src/algorithms/trigram/data-structures/parallel_hash_table.hpp
         src/algorithms/trigram/index/index.hpp
         src/algorithms/trigram/index/hash_index.hpp
         src/algorithms/trigram/models/doc_freq.hpp
