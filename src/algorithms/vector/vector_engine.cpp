@@ -9,6 +9,7 @@
 
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
+#include "./file_io.hpp"
 
 namespace hnsw = vectorlib::hnsw;
 
@@ -124,6 +125,8 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // insert vectors into hnsw
   for (const auto &[doc_id, _] : document_to_contained_terms_) {
     hnsw_alg->addPoint(&doc_id, doc_id);
+
+    if (doc_id % 10000 == 0) std::cout << "inserted: " << doc_id << "\n";
   }
 }
 
