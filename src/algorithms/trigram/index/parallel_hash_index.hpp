@@ -1,7 +1,7 @@
 #ifndef TRIGRAM_PARALLEL_HASH_INDEX_HPP
 #define TRIGRAM_PARALLEL_HASH_INDEX_HPP
 //---------------------------------------------------------------------------
-#include "data-structures/parallel_hash_table.hpp"
+#include "../../data-structures/parallel_hash_table.hpp"
 #include "index.hpp"
 #include "models/doc_freq.hpp"
 #include "models/trigram.hpp"
@@ -11,7 +11,7 @@ template <size_t TableSize, uint8_t MaxOffset>
 class ParallelHashIndex : public Index<DocFreq, std::vector<DocFreq>, MaxOffset> {
  public:
   /// Constructor.
-  ParallelHashIndex() = default;
+  ParallelHashIndex() : table(TableSize) {}
   /// Move Constructor.
   ParallelHashIndex(ParallelHashIndex&& other) noexcept : table(std::move(other.table)) {}
   /// Move assignment.
@@ -70,7 +70,7 @@ class ParallelHashIndex : public Index<DocFreq, std::vector<DocFreq>, MaxOffset>
 
  private:
   /// A mapping of trigram to buckets.
-  ParallelHashTable<uint32_t, std::vector<DocFreq>, TableSize> table;
+  ParallelHashTable<uint32_t, std::vector<DocFreq>> table;
 };
 //---------------------------------------------------------------------------
 }  // namespace trigramlib
