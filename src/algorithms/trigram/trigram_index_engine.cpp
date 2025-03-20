@@ -4,9 +4,8 @@
 #include <string>
 #include <thread>
 //---------------------------------------------------------------------------
-#include "../../tokenizer/simpletokenizer.hpp"
-#include "../../utils.hpp"
-#include "models/trigram.hpp"
+#include "utils.hpp"
+#include "algorithms/trigram/models/trigram.hpp"
 #include "trigram_index_engine.hpp"
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::indexDocuments(std::string& data_path) {

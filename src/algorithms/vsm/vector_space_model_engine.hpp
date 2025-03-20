@@ -5,7 +5,7 @@
 #ifndef VECTORSPACEMODELENGINE_HPP
 #define VECTORSPACEMODELENGINE_HPP
 
-#include "../../fts_engine.hpp"
+#include "fts_engine.hpp"
 
 class VectorSpaceModelEngine : public FullTextSearchEngine {
  public:

@@ -5,8 +5,8 @@
 #ifndef INVERTED_INDEX_ENGINE_HPP
 #define INVERTED_INDEX_ENGINE_HPP
 
-#include "../../data-structures/parallel_hash_table.hpp"
-#include "../../fts_engine.hpp"
+#include "data-structures/parallel_hash_table.hpp"
+#include "fts_engine.hpp"
 
 struct Token;
 

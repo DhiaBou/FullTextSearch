@@ -8,8 +8,8 @@
 #include <string>
 #include <thread>
 
-#include "../../documents/document_iterator.hpp"
-#include "../../tokenizer/stemmingtokenizer.hpp"
+#include "documents/document_iterator.hpp"
+#include "tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(std::string &data_path) {
   DocumentIterator doc_it(data_path);

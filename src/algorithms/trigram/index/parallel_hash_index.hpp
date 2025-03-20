@@ -1,10 +1,10 @@
 #ifndef TRIGRAM_PARALLEL_HASH_INDEX_HPP
 #define TRIGRAM_PARALLEL_HASH_INDEX_HPP
 //---------------------------------------------------------------------------
-#include "../../data-structures/parallel_hash_table.hpp"
+#include "data-structures/parallel_hash_table.hpp"
 #include "index.hpp"
-#include "models/doc_freq.hpp"
-#include "models/trigram.hpp"
+#include "algorithms/trigram/models/doc_freq.hpp"
+#include "algorithms/trigram/models/trigram.hpp"
 //---------------------------------------------------------------------------
 namespace trigramlib {
 template <size_t TableSize, uint8_t MaxOffset>

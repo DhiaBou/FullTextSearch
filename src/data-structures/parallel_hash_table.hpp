@@ -7,7 +7,7 @@
 #include <mutex>
 #include <vector>
 //---------------------------------------------------------------------------
-#include "../utils.hpp"
+#include "utils.hpp"
 //---------------------------------------------------------------------------
 template <typename T>
 struct Hasher;

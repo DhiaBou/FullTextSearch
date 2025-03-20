@@ -17,48 +17,71 @@ if(APPLE)
         include_directories(${PARQUET_INCLUDE_DIRS})
 endif()
 
-add_library(fts_lib
+set(FTS_HEADERS
         src/fts_engine.hpp
         src/utils.hpp
         src/documents/document.hpp
-        src/documents/document_iterator.cpp
         src/documents/document_iterator.hpp
-        src/data-structures/parallel_hash_table.hpp
         src/scoring/scoring_function.hpp
         src/scoring/bm25.hpp
-        src/scoring/bm25.cpp
         src/scoring/tf_idf.hpp
-        src/scoring/tf_idf.cpp
-        src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/inverted/inverted_index_engine.hpp
-        src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/trigram/index/index.hpp
         src/algorithms/trigram/index/hash_index.hpp
+        src/algorithms/trigram/index/parallel_hash_index.hpp
         src/algorithms/trigram/models/doc_freq.hpp
         src/algorithms/trigram/models/trigram.hpp
         src/algorithms/trigram/parser/trigram_parser.hpp
-        src/algorithms/trigram/parser/trigram_parser.cpp
-        src/algorithms/vsm/vector_space_model_engine.cpp
         src/algorithms/vsm/vector_space_model_engine.hpp
         src/tokenizer/snowball/api.h
-        src/tokenizer/snowball/api.c
-        src/tokenizer/snowball/utilities.c
         src/tokenizer/snowball/header.h
         src/tokenizer/snowball/stem_UTF_8_english.h
-        src/tokenizer/snowball/stem_UTF_8_english.c
-        src/tokenizer/stemmingtokenizer.cpp
         src/tokenizer/stemmingtokenizer.hpp
         src/tokenizer/ITokenizer.hpp
-        src/tokenizer/simpletokenizer.cpp
         src/tokenizer/simpletokenizer.hpp
         src/tokenizer/tokenizer_rules.hpp
 )
 
-target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared)
+set(FTS_SOURCES
+        src/documents/document_iterator.cpp
+        src/scoring/bm25.cpp
+        src/scoring/tf_idf.cpp
+        src/algorithms/inverted/inverted_index_engine.cpp
+        src/algorithms/trigram/trigram_index_engine.cpp
+        src/algorithms/trigram/parser/trigram_parser.cpp
+        src/algorithms/vsm/vector_space_model_engine.cpp
+        src/tokenizer/snowball/api.c
+        src/tokenizer/snowball/utilities.c
+        src/tokenizer/snowball/stem_UTF_8_english.c
+        src/tokenizer/stemmingtokenizer.cpp
+        src/tokenizer/simpletokenizer.cpp
+)
+
+add_library(fts_lib
+        ${FTS_HEADERS}
+        ${FTS_SOURCES}
+)
+
+target_include_directories(fts_lib
+        PUBLIC
+        ${ARROW_INCLUDE_DIRS}
+        ${PARQUET_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/src
+)
+
+target_link_libraries(fts_lib
+        PRIVATE
+        arrow_shared
+        parquet_shared
+)
 
 add_executable(fts src/main.cpp)
-target_link_libraries(fts PRIVATE fts_lib)
+
+target_link_libraries(fts
+        PRIVATE
+        fts_lib
+)
 
 enable_testing()
 
