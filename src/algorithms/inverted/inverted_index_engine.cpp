@@ -181,8 +181,9 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
 }
 
 uint64_t InvertedIndexEngine::footprint() {
-  // TODO
-  return 0;
+  using tokens_per_document_type = decltype(tokens_per_document_)::value_type;
+  size_t tokens_per_document_footprint = tokens_per_document_.capacity() * sizeof(tokens_per_document_type);
+  return term_frequency_per_document_.footprint() + tokens_per_document_footprint;
 }
 
 uint32_t InvertedIndexEngine::getDocumentCount() { return tokens_per_document_.size(); }
