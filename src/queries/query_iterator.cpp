@@ -9,7 +9,7 @@ FileIterator::FileIterator(const std::string& path) : current(0) {
     if (entry.path().extension() == ".txt") {
       // Only .txt files contain queries
 
-      query_utils::FileReader query_input(entry.path().c_str());
+      utils::FileReader query_input(entry.path().c_str());
       queries.push_back(
           {{entry.path().stem().string()}, {query_input.begin(), query_input.getSize()}});
     }
