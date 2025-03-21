@@ -1,9 +1,9 @@
 #ifndef TRIGRAM_HASH_INDEX_HPP
 #define TRIGRAM_HASH_INDEX_HPP
 //---------------------------------------------------------------------------
-#include "index.hpp"
 #include "algorithms/trigram/models/doc_freq.hpp"
 #include "algorithms/trigram/models/trigram.hpp"
+#include "index.hpp"
 //---------------------------------------------------------------------------
 namespace trigramlib {
 //---------------------------------------------------------------------------

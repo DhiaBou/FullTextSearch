@@ -4,9 +4,9 @@
 #include <string>
 #include <thread>
 //---------------------------------------------------------------------------
-#include "utils.hpp"
 #include "algorithms/trigram/models/trigram.hpp"
 #include "trigram_index_engine.hpp"
+#include "utils.hpp"
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::indexDocuments(std::string& data_path) {
   DocumentIterator doc_it(data_path);

@@ -1,11 +1,11 @@
 #ifndef TRIGRAM_INDEX_ENGINE_HPP
 #define TRIGRAM_INDEX_ENGINE_HPP
 //---------------------------------------------------------------------------
+#include "algorithms/trigram/models/trigram.hpp"
+#include "algorithms/trigram/parser/trigram_parser.hpp"
 #include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "index/parallel_hash_index.hpp"
-#include "algorithms/trigram/models/trigram.hpp"
-#include "algorithms/trigram/parser/trigram_parser.hpp"
 //---------------------------------------------------------------------------
 class TrigramIndexEngine : public FullTextSearchEngine {
  public:

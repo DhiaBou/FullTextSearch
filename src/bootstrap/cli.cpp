@@ -15,9 +15,9 @@ FTSOptions parseCommandLine(int argc, char** argv) {
     ("s,scoring", "Scoring (tf-idf,bm25)", cxxopts::value<std::string>())
     ("n,num_results", "Number of results displayed per query", cxxopts::value<uint32_t>()->default_value("10"))
     (
-        "q,queries",
-        "Optional: Specifies the path to a directory containing .txt files. Each file represents a single query. "\
-        "Also, it represents the output directory of the query results.", cxxopts::value<std::string>()
+      "q,queries",
+      "Optional: Specifies the path to a directory containing .txt files. Each file represents a single query. "\
+      "Also, it represents the output directory of the query results.", cxxopts::value<std::string>()
     )
     ("h,help", "Print usage");
   // clang-format on
