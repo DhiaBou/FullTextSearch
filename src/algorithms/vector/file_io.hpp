@@ -96,6 +96,7 @@ class MmapedFileReader {
   }
   const char *begin() const { return data; }
   const char *end() const { return data + size; }
+  const size_t get_size() const { return size; }
 
  private:
   int file_descriptor;

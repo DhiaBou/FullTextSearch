@@ -1,6 +1,7 @@
 #include "vector_engine.hpp"
 
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -10,6 +11,8 @@
 #include "../../scoring/tf_idf.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 #include "./file_io.hpp"
+#include "algorithms/vector/index/hnsw/spaces/l2_space.hpp"
+#include "fts_engine.hpp"
 
 namespace hnsw = vectorlib::hnsw;
 
@@ -34,14 +37,13 @@ void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> c
 
 void VectorEngine::store_documents_per_term() {
   std::vector<uint32_t> v;
-  v.reserve(documents_per_term_.size() * 2);
-  for (const auto &[tid, num_docs] : documents_per_term_) {
-    v.push_back(tid);
+  v.reserve(documents_per_term_.size());
+  for (const auto &num_docs : documents_per_term_) {
     v.push_back(num_docs);
   }
   std::string documents_per_term_fname = "documents_per_term";
   MmapedFileWriter dpt(documents_per_term_fname.c_str(), v.size() * sizeof(uint32_t));
-  dpt.write(reinterpret_cast<const char *>(v.data()), v.size() * 8);
+  dpt.write(reinterpret_cast<const char *>(v.data()), v.size() * sizeof(uint32_t));
 }
 
 void VectorEngine::store_vectors() {
@@ -68,12 +70,10 @@ void VectorEngine::store_vectors() {
 void VectorEngine::load_documents_per_term() {
   std::string dpt_fname = "documents_per_term";
   MmapedFileReader dpt_reader(dpt_fname);
-  for (const char *d = dpt_reader.begin(); d < dpt_reader.end(); d += sizeof(uint32_t) * 2) {
-    documents_per_term_[*(reinterpret_cast<const uint32_t *>(d))] =
-        *reinterpret_cast<const uint32_t *>(d + sizeof(uint32_t));
-  }
+  documents_per_term_.reserve(dpt_reader.get_size() / sizeof(uint32_t));
+  memcpy(documents_per_term_.data(), dpt_reader.begin(), dpt_reader.get_size() / sizeof(uint32_t));
 }
-void VectorEngine::load_vectors() {}
+void VectorEngine::load_vectors() { load_documents_per_term(); }
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // key is term id, value is a map of doc id to term frequency
@@ -95,6 +95,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       // TermID
       if (term_to_term_id.find(token) == term_to_term_id.end()) {
         term_id_to_term.push_back(token);
+        documents_per_term_.push_back(0);  // because it is increased later
         term_to_term_id[token] = term_id_to_term.size() - 1;
       }
       TermID tid = term_to_term_id[token];
@@ -162,10 +163,22 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   }
   print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
 
-  // insert vectors into hnsw
-  for (const auto &[doc_id, _] : document_to_contained_terms_) {
-    hnsw_alg->addPoint(&doc_id, doc_id);
+  // TODO: test storing vectors
+  store_vectors();
+  for (TermID tid = 0; tid < 100; ++tid) {
+    std::cout << documents_per_term_[tid] << " ";
+  }
+  std::cout << "\n";
+  documents_per_term_.clear();
+  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.";
+  load_vectors();
+  for (TermID tid = 0; tid < 100; ++tid) {
+    std::cout << documents_per_term_[tid] << " ";
+  }
 
+  // insert vectors into hnsw
+  for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
+    hnsw_alg->addPoint(&doc_id, doc_id);
     if (doc_id % 10000 == 0) std::cout << "inserted: " << doc_id << "\n";
   }
 }

@@ -21,9 +21,8 @@ namespace hnsw {
 class L2DistanceFunctor {
  public:
   // Constructor takes references to external objects
-  L2DistanceFunctor(
-      const std::unordered_map<DocumentID, std::vector<float>>& document_to_vector,
-      const std::unordered_map<DocumentID, std::vector<TermID>>& document_to_contained_terms)
+  L2DistanceFunctor(const std::vector<std::vector<float>>& document_to_vector,
+                    const std::vector<std::vector<TermID>>& document_to_contained_terms)
       : document_to_vector_(document_to_vector),
         document_to_contained_terms_(document_to_contained_terms) {}
 
@@ -69,8 +68,8 @@ class L2DistanceFunctor {
   }
 
  private:
-  const std::unordered_map<DocumentID, std::vector<float>>& document_to_vector_;
-  const std::unordered_map<DocumentID, std::vector<TermID>>& document_to_contained_terms_;
+  const std::vector<std::vector<float>>& document_to_vector_;
+  const std::vector<std::vector<TermID>>& document_to_contained_terms_;
 };
 
 // static float l2SqrDocId(const void* pVect1, const void* pVect2, const void* pQty) {
@@ -120,9 +119,8 @@ class L2DistanceFunctor {
 //--------------------------------------------------------------------------------------------------
 class L2SpaceDocId : public SpaceInterface<float> {
  public:
-  explicit L2SpaceDocId(
-      size_t dim, std::unordered_map<DocumentID, std::vector<float>>& document_to_vector_,
-      std::unordered_map<DocumentID, std::vector<TermID>>& document_to_contained_terms_)
+  explicit L2SpaceDocId(size_t dim, std::vector<std::vector<float>>& document_to_vector_,
+                        std::vector<std::vector<TermID>>& document_to_contained_terms_)
       : document_to_vector_(document_to_vector_),
         document_to_contained_terms_(document_to_contained_terms_),
         l2_distance_functor_(document_to_vector_, document_to_contained_terms_) {
@@ -139,8 +137,8 @@ class L2SpaceDocId : public SpaceInterface<float> {
 
   ~L2SpaceDocId() {}
 
-  std::unordered_map<DocumentID, std::vector<float>>& document_to_vector_;
-  std::unordered_map<DocumentID, std::vector<TermID>>& document_to_contained_terms_;
+  std::vector<std::vector<float>>& document_to_vector_;
+  std::vector<std::vector<TermID>>& document_to_contained_terms_;
 
  private:
   // DISTFUNC<float> fstdistfunc_;

@@ -56,15 +56,18 @@ class VectorEngine : public FullTextSearchEngine {
   void load_vectors();
 
   /// key is term id, value is number of documents this token appears in
-  std::unordered_map<TermID, uint32_t> documents_per_term_;
+  // std::unordered_map<TermID, uint32_t> documents_per_term_;
+  std::vector<uint32_t> documents_per_term_;
 
   /// key is document id, value is the vector that contains the values sparse representation of the
   /// tfidf values.
-  std::unordered_map<DocumentID, std::vector<float>> document_to_vector_;
+  // std::unordered_map<DocumentID, std::vector<float>> document_to_vector_;
+  std::vector<std::vector<float>> document_to_vector_;
 
   /// key is document id, value is the vector that contains the TermIDs of the terms that this
   /// document contains
-  std::unordered_map<DocumentID, std::vector<TermID>> document_to_contained_terms_;
+  // std::unordered_map<DocumentID, std::vector<TermID>> document_to_contained_terms_;
+  std::vector<std::vector<TermID>> document_to_contained_terms_;
 
   std::unordered_map<std::string, TermID> term_to_term_id;
 
