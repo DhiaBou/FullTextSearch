@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "data-structures/parallel_hash_table.hpp"
+#include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 
 struct Token;
@@ -26,16 +27,16 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   double getAvgDocumentLength() override;
 
  private:
-  double docScoreForToken(uint32_t docId, const std::string &token);
+  void estimateDataStructureSizes(const std::string &data_path);
 
-  std::pair<uint64_t, uint64_t> getNumTokensAndMaxDocId(const std::string &data_path) const;
+  void indexBatch(const std::vector<Document> &batch);
 
   const uint64_t NUM_THREADS = std::thread::hardware_concurrency();
 
   double average_doc_length_ = -1.0;
 
   /// key is token, value is a map of doc id to term frequency
-  ParallelHashTable<std::string, std::unordered_map<DocumentID, uint32_t>>
+  ParallelHashTable<std::string, std::vector<std::pair<DocumentID, uint32_t>>>
       term_frequency_per_document_{1};
 
   /// key is document id, value is number of tokens or terms

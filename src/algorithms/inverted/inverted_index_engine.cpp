@@ -3,7 +3,6 @@
 #include "inverted_index_engine.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <thread>
@@ -14,77 +13,54 @@
 #include "tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(std::string &data_path) {
-
-  auto [num_token, max_doc_id] = getNumTokensAndMaxDocId(data_path);
-  term_frequency_per_document_ = ParallelHashTable<std::string, std::unordered_map<DocumentID, uint32_t>>{num_token};
-  tokens_per_document_.resize(max_doc_id + 1);
+  estimateDataStructureSizes(data_path);
 
   DocumentIterator doc_it(data_path);
 
   auto index_batches = [&doc_it, this]() {
-    std::vector<Document> current_batch = doc_it.next();
-    while (!current_batch.empty()) {
-      for (Document &doc : current_batch) {
-        auto begin = doc.getData();
-
-        tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
-        // tokenizer::SimpleTokenizer tokenizer(begin, doc.getSize());
-
-        for (auto token = tokenizer.nextToken(false); !token.empty();
-             token = tokenizer.nextToken(false)) {
-          // increment the number of times a token appeared in that document
-          auto increase_term_frequency = [&doc](std::unordered_map<uint32_t, uint32_t> &docs) {
-            ++docs[doc.getId()];
-          };
-          term_frequency_per_document_.updateOrInsert(token, increase_term_frequency,
-                                                      std::unordered_map<DocumentID, uint32_t>{});
-          // increase the total number of terms in doc d
-          tokens_per_document_[doc.getId()]++;
-        }
-      }
-      current_batch = doc_it.next();
+    std::vector<Document> cur_batch = doc_it.next();
+    while (!cur_batch.empty()) {
+      indexBatch(cur_batch);
+      cur_batch = doc_it.next();
     }
   };
 
   std::vector<std::thread> threads;
   for (int i = 0; i < NUM_THREADS; i++) {
-    threads.push_back(std::thread{index_batches});
+    threads.emplace_back(index_batches);
   }
   for (auto &thread : threads) {
     thread.join();
   }
 }
 
-double InvertedIndexEngine::docScoreForToken(uint32_t docId, const std::string &token) {
-  // Ensure token exists in the doc's frequency map, otherwise term frequency is 0.
-  auto docFreqIt = term_frequency_per_document_.find(token);
-  if (docFreqIt == term_frequency_per_document_.end()) {
-    return 0.0;
-  }
+void InvertedIndexEngine::indexBatch(const std::vector<Document> &batch) {
+    for (const Document &doc : batch) {
+      uint32_t num_tokens = 0;
+      std::unordered_map<std::string, uint32_t> local_term_frequency_per_document{};
 
-  const auto &freqMap = docFreqIt->second;
-  auto it = freqMap.find(docId);
-  if (it == freqMap.end()) {
-    return 0.0;  // token not in doc
-  }
+      auto begin = doc.getData();
 
-  uint32_t tf = it->second;
-  uint32_t totalTokens = tokens_per_document_[docId];
-  uint32_t docsContainingToken = freqMap.size();
-  uint32_t totalDocs = tokens_per_document_.size();
+      tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
 
-  if (totalTokens == 0 || docsContainingToken == 0 || totalDocs == 0) {
-    return 0.0;
-  }
+      for (auto token = tokenizer.nextToken(false); !token.empty(); token = tokenizer.nextToken(false)) {
+        local_term_frequency_per_document[token]++;
+        num_tokens++;
+      }
+      tokens_per_document_[doc.getId()] = num_tokens;
 
-  float termFrequency = static_cast<float>(tf) / static_cast<float>(totalTokens);
-  double idf = std::log((static_cast<double>(totalDocs) + 1.0) /
-                        (static_cast<double>(docsContainingToken) + 1.0));
-
-  return termFrequency * idf;
+      for (const auto &[token, freq] : local_term_frequency_per_document) {
+        auto add_term_frequency = [&doc, freq](std::vector<std::pair<DocumentID, uint32_t>> &docs) {
+          docs.emplace_back(doc.getId(), freq);
+        };
+        term_frequency_per_document_.updateOrInsert(token, add_term_frequency,
+                                                    std::vector<std::pair<DocumentID, uint32_t>>{});
+      }
+    }
 }
 
-std::pair<uint64_t, uint64_t> InvertedIndexEngine::getNumTokensAndMaxDocId(const std::string &data_path) const {
+
+void InvertedIndexEngine::estimateDataStructureSizes(const std::string &data_path) {
   DocumentIterator doc_it(data_path);
 
   std::atomic<uint32_t> max_doc_id = 0;
@@ -97,7 +73,7 @@ std::pair<uint64_t, uint64_t> InvertedIndexEngine::getNumTokensAndMaxDocId(const
     while (!current_batch.empty()) {
       for (Document &doc : current_batch) {
         local_max_doc_id = std::max(local_max_doc_id, doc.getId());
-        auto begin = doc.getData();
+        const auto begin = doc.getData();
 
         tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
 
@@ -124,7 +100,9 @@ std::pair<uint64_t, uint64_t> InvertedIndexEngine::getNumTokensAndMaxDocId(const
     thread.join();
   }
 
-  return {hyper_log_log.getCount(), max_doc_id};
+
+  term_frequency_per_document_ = ParallelHashTable<std::string, std::vector<std::pair<DocumentID, uint32_t>>>{hyper_log_log.getCount() * 2};
+  tokens_per_document_.resize(max_doc_id + 1);
 }
 
 std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
@@ -134,7 +112,7 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
   // tokenizer::SimpleTokenizer tokenizer(query.c_str(), query.size());
 
   // Map of doc_id -> cumulative score
-  std::unordered_map<uint32_t, double> doc_scores;
+  std::unordered_map<DocumentID, double> doc_to_score;
 
   // Compute scores for each token in the query
   for (auto token = tokenizer.nextToken(false); !token.empty();
@@ -145,11 +123,12 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
       continue;
     }
 
+    std::vector<std::pair<DocumentID, uint32_t>> appearances = it->second;
+
     // For each document that contains this token, accumulate its score
-    for (const auto &doc_freq : it->second) {
-      uint32_t doc_id = doc_freq.first;
-      double score = docScoreForToken(doc_id, token);
-      doc_scores[doc_id] += score;
+    for (const auto &[doc_id, freq] : appearances) {
+      double score = score_func.score({tokens_per_document_[doc_id]}, {freq, static_cast<uint32_t>(appearances.size())});
+      doc_to_score[doc_id] += score;
     }
   }
 
@@ -158,7 +137,7 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
                       std::greater<>>
       results;
 
-  for (const auto &entry : doc_scores) {
+  for (const auto &entry : doc_to_score) {
     const double &score = entry.second;
     const uint32_t &doc_id = entry.first;
 
