@@ -33,6 +33,7 @@ add_library(fts_lib
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.hpp
+        src/algorithms/vector/file_io.hpp
         src/algorithms/vector/vector_engine.cpp
         src/algorithms/vector/vector_engine.hpp
         src/algorithms/vector/index/vector_lib.hpp

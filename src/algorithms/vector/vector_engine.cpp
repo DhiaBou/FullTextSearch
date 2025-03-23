@@ -86,6 +86,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
   while (doc_it.hasNext()) {
     auto doc = *doc_it;
+    DocumentID did = doc->getId() - 1;
     tokenizer::StemmingTokenizer tokenizer(doc->getData(), doc->getSize());
     std::unordered_set<TermID> unique_terms_in_doc;
 
@@ -102,18 +103,17 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       unique_terms_in_doc.insert(tid);
 
       // increment the number of times a token appeared in that document
-      term_frequency_per_document_[tid][doc->getId()]++;
+      term_frequency_per_document_[tid][did]++;
 
       // increase the total number of terms in this document
-      terms_per_document_[doc->getId()]++;
+      terms_per_document_[did]++;
 
       // std::cout << token << "\n";
     }
 
-    if (doc->getId() % 10000 == 0) {
-      std::cout << doc->getId() << "\n";
-    }
-    // std::cout << tokens_per_document_[doc->getId()] << "\n";
+    // if (did % 10000 == 0) {
+    std::cout << did << "\n";
+    // }
 
     // for every term that occurs in this document, increase the count of documents that this term
     // occurs in
@@ -126,7 +126,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
     std::sort(sorted_tokens.begin(), sorted_tokens.end());
 
-    document_to_contained_terms_[doc->getId()] = std::move(sorted_tokens);
+    document_to_contained_terms_.push_back(std::move(sorted_tokens));
 
     // std::cout << documents_per_token_.size() << "\n";
 
@@ -144,24 +144,29 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
   // iterate through all documents
   uint32_t debug_counter = 0;
-  for (const auto &[doc_id, num_tokens] : terms_per_document_) {
+  for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
+    uint32_t num_tokens = terms_per_document_[did];
     std::vector<float> vec;
-    vec.reserve(document_to_contained_terms_[doc_id].size());
+    std::cout << "did: " << did << "\n";
+
+    std::cout << "document_to_contained_terms_[did].size(): "
+              << document_to_contained_terms_[did].size() << "\n";
+    vec.reserve(document_to_contained_terms_[did].size());
 
     // iterate over all terms in this document
-    for (const auto tid : document_to_contained_terms_[doc_id]) {
+    for (const auto tid : document_to_contained_terms_[did]) {
       vec.push_back((float)score_func->score(
-          {num_tokens}, {term_frequency_per_document_[tid][doc_id], documents_per_term_[tid]}));
+          {num_tokens}, {term_frequency_per_document_[tid][did], documents_per_term_[tid]}));
     }
 
-    document_to_vector_[doc_id] = std::move(vec);
+    document_to_vector_.push_back(std::move(vec));
 
-    if (debug_counter % 10000 == 0) {
-      std::cout << debug_counter << "\n";
-    }
+    // if (debug_counter % 10000 == 0) {
+    std::cout << debug_counter << "\n";
+    // }
     ++debug_counter;
   }
-  print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
+  print_vector(document_to_vector_[2], document_to_contained_terms_[1]);
 
   // TODO: test storing vectors
   store_vectors();
@@ -170,7 +175,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   }
   std::cout << "\n";
   documents_per_term_.clear();
-  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.";
+  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
   load_vectors();
   for (TermID tid = 0; tid < 100; ++tid) {
     std::cout << documents_per_term_[tid] << " ";
