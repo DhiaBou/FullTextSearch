@@ -36,18 +36,39 @@ void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> c
 // std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
 
 void VectorEngine::store_documents_per_term() {
-  std::vector<uint32_t> v;
-  v.reserve(documents_per_term_.size());
-  for (const auto &num_docs : documents_per_term_) {
-    v.push_back(num_docs);
+  std::string file_name = "documents_per_term";
+  MmapedFileWriter dpt(file_name.c_str(), documents_per_term_.size() * sizeof(uint32_t));
+  dpt.write(reinterpret_cast<const char *>(documents_per_term_.data()),
+            documents_per_term_.size() * sizeof(uint32_t));
+}
+
+void VectorEngine::store_document_to_vector() {
+  std::string file_name = "document_to_vector";
+
+  // just take an approximate size as initial max size. It will be scaled up or down if needed.
+  MmapedFileWriter dtv(file_name.c_str(),
+                       document_to_vector_.size() * document_to_vector_[0].size() * sizeof(float));
+
+  // write total number of documents
+  uint32_t num_docs = static_cast<uint32_t>(document_to_vector_.size());
+  dtv.write(&num_docs, sizeof(uint32_t));
+
+  for (DocumentID did = 0; did < document_to_vector_.size(); ++did) {
+    // write size of vector
+    uint32_t vector_size = static_cast<uint32_t>(document_to_vector_[did].size());
+    dtv.write(&vector_size, sizeof(uint32_t));
+
+    // std::cout << document_to_vector_[did][0] << "\n";
+
+    // write vector
+    dtv.write(reinterpret_cast<const char *>(document_to_vector_[did].data()),
+              document_to_vector_[did].size() * sizeof(float));
   }
-  std::string documents_per_term_fname = "documents_per_term";
-  MmapedFileWriter dpt(documents_per_term_fname.c_str(), v.size() * sizeof(uint32_t));
-  dpt.write(reinterpret_cast<const char *>(v.data()), v.size() * sizeof(uint32_t));
 }
 
 void VectorEngine::store_vectors() {
   store_documents_per_term();
+  store_document_to_vector();
 
   // TODO: for the other vectors, store the size directly after the id, then you can just memcpy it
   // completely.
@@ -68,12 +89,40 @@ void VectorEngine::store_vectors() {
 }
 
 void VectorEngine::load_documents_per_term() {
-  std::string dpt_fname = "documents_per_term";
-  MmapedFileReader dpt_reader(dpt_fname);
+  std::string file_name = "documents_per_term";
+  MmapedFileReader dpt_reader(file_name);
   documents_per_term_.reserve(dpt_reader.get_size() / sizeof(uint32_t));
   memcpy(documents_per_term_.data(), dpt_reader.begin(), dpt_reader.get_size() / sizeof(uint32_t));
 }
-void VectorEngine::load_vectors() { load_documents_per_term(); }
+
+void VectorEngine::load_document_to_vector() {
+  std::string file_name = "document_to_vector";
+  MmapedFileReader dtv_reader(file_name);
+  const char *cur = dtv_reader.begin();
+
+  // read in total number of documents in document_to_vector
+  document_to_vector_.resize(*reinterpret_cast<const uint32_t *>(cur));
+  cur += sizeof(uint32_t);
+
+  for (DocumentID did = 0; did < document_to_vector_.size(); ++did) {
+    std::vector<float> &vec = document_to_vector_[did];
+
+    // read in the size of the vector for this document
+    vec.resize(*reinterpret_cast<const uint32_t *>(cur));
+    cur += sizeof(uint32_t);
+
+    // std::cout << *reinterpret_cast<const float *>(cur) << "\n";
+
+    // read in the actual vector
+    memcpy(vec.data(), cur, vec.size() * sizeof(float));
+    cur += vec.size() * sizeof(float);
+  }
+}
+
+void VectorEngine::load_vectors() {
+  load_documents_per_term();
+  load_document_to_vector();
+}
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // key is term id, value is a map of doc id to term frequency
@@ -147,10 +196,10 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
     uint32_t num_tokens = terms_per_document_[did];
     std::vector<float> vec;
-    std::cout << "did: " << did << "\n";
+    // std::cout << "did: " << did << "\n";
 
-    std::cout << "document_to_contained_terms_[did].size(): "
-              << document_to_contained_terms_[did].size() << "\n";
+    // std::cout << "document_to_contained_terms_[did].size(): "
+    //           << document_to_contained_terms_[did].size() << "\n";
     vec.reserve(document_to_contained_terms_[did].size());
 
     // iterate over all terms in this document
@@ -170,21 +219,40 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
   // TODO: test storing vectors
   store_vectors();
+  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
   for (TermID tid = 0; tid < 100; ++tid) {
     std::cout << documents_per_term_[tid] << " ";
   }
-  std::cout << "\n";
+  std::cout << std::endl;
   documents_per_term_.clear();
   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
+  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+  for (auto e : document_to_vector_[0]) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  document_to_vector_.clear();
+  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
   load_vectors();
+  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
   for (TermID tid = 0; tid < 100; ++tid) {
     std::cout << documents_per_term_[tid] << " ";
   }
+  std::cout << std::endl;
+
+  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+  for (auto e : document_to_vector_[0]) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  // TODO: end test storing vectors
 
   // insert vectors into hnsw
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
-    if (doc_id % 10000 == 0) std::cout << "inserted: " << doc_id << "\n";
+    // if (doc_id % 10000 == 0) {
+    std::cout << "inserted: " << doc_id << "\n";
+    // }
   }
 }
 

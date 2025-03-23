@@ -51,9 +51,24 @@ class VectorEngine : public FullTextSearchEngine {
   // std::vector<float> compress_vector(std::vector<float> v);
   // std::vector<float> decompress_vector(std::vector<float> v);
   void store_vectors();
+
+  /**
+   * Stores the vector @documents_per_term with the following scheme:
+   * [number_of_documents_that_contain_first_term][number_of_documents_that_contain_second_term][number_of_documents_that_contain_third_term]
+   * total number of terms can be determined from the size of the file.
+   * term_id can be determined from the location in the array.
+   */
   void store_documents_per_term();
-  void load_documents_per_term();
+
+  /**
+   * Stores the vector @document_to_vector_ with the following scheme:
+   * [num_of_documents_in_total][size_of_first_vector][first_value_of_first_vector][second_value_of_first_vector]...[last_value_of_first_vector][size_of_second_vector]
+   * All consecutive.
+   */
+  void store_document_to_vector();
   void load_vectors();
+  void load_documents_per_term();
+  void load_document_to_vector();
 
   /// key is term id, value is number of documents this token appears in
   // std::unordered_map<TermID, uint32_t> documents_per_term_;

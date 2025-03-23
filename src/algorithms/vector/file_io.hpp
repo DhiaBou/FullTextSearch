@@ -46,14 +46,14 @@ class MmapedFileWriter {
   // const char *begin() const { return data; }
   // const char *end() const { return data + actual_file_size; }
 
-  void write(const char *c, size_t size) {
+  void write(const void *source, size_t size) {
     if (consumed_size + size > current_max_size) {
       size_t new_max_size = (current_max_size * 2 > consumed_size + size)
                                 ? current_max_size * 2
                                 : current_max_size * 2 + size;
       resize(new_max_size);
     }
-    memcpy(this->data + this->consumed_size, c, size);
+    memcpy(this->data + this->consumed_size, source, size);
     this->consumed_size += size;
   }
 
