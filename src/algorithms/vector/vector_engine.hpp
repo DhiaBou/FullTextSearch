@@ -68,10 +68,15 @@ class VectorEngine : public FullTextSearchEngine {
   void store_document_to_vector();
 
   void store_document_to_contained_terms();
+  /**
+   * This function suffices. There is no need for a function to store term_to_term_id.
+   */
+  void store_term_id_to_term();
   void load_vectors();
   void load_documents_per_term();
   void load_document_to_vector();
   void load_document_to_contained_terms();
+  void load_term_id_to_term();
 
   /// key is term id, value is number of documents this token appears in
   // std::unordered_map<TermID, uint32_t> documents_per_term_;
@@ -91,6 +96,9 @@ class VectorEngine : public FullTextSearchEngine {
 
   /// TODO: Only needed for debugging and testing
   std::vector<std::string> term_id_to_term;
+
+  /// TODO: Only needed for debugging and testing
+  void test_store_and_load();
 
   hnsw::L2SpaceDocId space;
 };
