@@ -307,9 +307,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       // std::cout << token << "\n";
     }
 
-    // if (did % 10000 == 0) {
-    std::cout << did << "\n";
-    // }
+    if (did % 10000 == 0) {
+      std::cout << did << "\n";
+    }
 
     // for every term that occurs in this document, increase the count of documents that this term
     // occurs in
@@ -357,9 +357,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
     document_to_vector_.push_back(std::move(vec));
 
-    // if (debug_counter % 10000 == 0) {
-    std::cout << debug_counter << "\n";
-    // }
+    if (debug_counter % 10000 == 0) {
+      std::cout << debug_counter << "\n";
+    }
     ++debug_counter;
   }
   print_vector(document_to_vector_[2], document_to_contained_terms_[1]);
@@ -369,9 +369,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // insert vectors into hnsw
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
-    // if (doc_id % 10000 == 0) {
-    std::cout << "inserted: " << doc_id << "\n";
-    // }
+    if (doc_id % 10000 == 0) {
+      std::cout << "inserted: " << doc_id << "\n";
+    }
   }
 }
 
