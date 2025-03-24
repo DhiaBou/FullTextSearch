@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "documents/document_iterator.hpp"
+#include "tokenizer/simpletokenizer.hpp"
 #include "tokenizer/stemmingtokenizer.hpp"
 
 void InvertedIndexEngine::indexDocuments(std::string &data_path) {
@@ -21,6 +22,7 @@ void InvertedIndexEngine::indexDocuments(std::string &data_path) {
         auto begin = doc.getData();
 
         tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
+        // tokenizer::SimpleTokenizer tokenizer(begin, doc.getSize());
 
         for (auto token = tokenizer.nextToken(false); !token.empty();
              token = tokenizer.nextToken(false)) {
@@ -85,6 +87,7 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
     const std::string &query, const scoring::ScoringFunction &score_func, uint32_t num_results) {
   // Tokenize the query
   tokenizer::StemmingTokenizer tokenizer(query.c_str(), query.size());
+  // tokenizer::SimpleTokenizer tokenizer(query.c_str(), query.size());
 
   // Map of doc_id -> cumulative score
   std::unordered_map<uint32_t, double> doc_scores;

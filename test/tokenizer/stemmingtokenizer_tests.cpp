@@ -129,12 +129,12 @@ TEST(StemmingTokenizerTest, MixedDelimitersAndTokens) {
 
 // Test for Unicode characters
 TEST(StemmingTokenizerTest, UnicodeCharacters) {
-  const std::string input = "résumé café naïve jalapeño";
+  const std::string input = "résumés café naïve jalapeño";
   SimpleTokenizer tokenizer(input.c_str(), input.size());
 
   // Note: Stemming rules for these words might vary; here we expect no stemming due to Unicode
   // handling.
-  std::vector<std::string> expectedTokens = {"résumé", "café", "naïve", "jalapeño"};
+  std::vector<std::string> expectedTokens = {"résumés", "café", "naïve", "jalapeño"};
   std::vector<std::string> tokens;
   while (true) {
     std::string token = tokenizer.nextToken(false);

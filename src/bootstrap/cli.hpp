@@ -12,6 +12,7 @@ struct FTSOptions {
   std::string scoring;
   uint32_t num_results;
   std::string queries_path;
+  bool benchmarking_mode;
 };
 //---------------------------------------------------------------------------
 FTSOptions parseCommandLine(int argc, char** argv);
