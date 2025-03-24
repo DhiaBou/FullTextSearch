@@ -427,16 +427,14 @@ std::vector<std::pair<DocumentID, double>> VectorEngine::search(
   while (!pq.empty()) {
     auto [dist, id] = pq.top();
 
-    res[--i] = {id, dist};
+    res[--i] = {id + 1, dist};
     pq.pop();
   }
 
   return res;
 }
 
-uint32_t VectorEngine::getDocumentCount() {
-  throw std::runtime_error("Method is not yet implemented.");
-}
+uint32_t VectorEngine::getDocumentCount() { return document_to_vector_.size(); }
 
 double VectorEngine::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
