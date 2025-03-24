@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   auto options = bootstrap::parseCommandLine(argc, argv);
 
   // Decide for a FTS-Index-Engine
-  auto algorithm_choice = std::move(options.algorithm);
+  auto& algorithm_choice = options.algorithm;
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
     engine = std::make_unique<VectorSpaceModelEngine>();
@@ -32,7 +32,15 @@ int main(int argc, char** argv) {
   }
 
   // Build the FTS-Index
-  engine->indexDocuments(options.data_path);
+  std::cout << "Build: ";
+  {
+    utils::Timer<std::chrono::milliseconds> timer;
+    engine->indexDocuments(options.data_path);
+  }
+
+  // Determine the memory footprint
+  const auto& footprint = engine->footprint();
+  std::cout << "Memory footprint: " << footprint << std::endl;
 
   if (options.benchmarking_mode) {
     return 0;
@@ -40,7 +48,7 @@ int main(int argc, char** argv) {
 
   // Define the scoring function used to score documents
   std::unique_ptr<scoring::ScoringFunction> score_func;
-  auto scoring_choice = std::move(options.scoring);
+  auto& scoring_choice = options.scoring;
   if (scoring_choice == "bm25") {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
@@ -62,7 +70,14 @@ int main(int argc, char** argv) {
 
   while (query_engine->hasNext()) {
     queries::Query query = query_engine->next();
-    auto results = engine->search(query.content, *score_func, options.num_results);
+
+    // Run query
+    std::vector<std::pair<DocumentID, double>> results;
+    std::cout << query.content << ": ";
+    {
+      utils::Timer<std::chrono::microseconds> timer;
+      results = engine->search(query.content, *score_func, options.num_results);
+    }
 
     if (query_engine->getType() == queries::QueryIterator::Type::File) {
       fs::path output_path = fs::path(options.queries_path) / (query.id + "_result.tbl");

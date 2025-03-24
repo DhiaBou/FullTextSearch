@@ -7,6 +7,7 @@
 //---------------------------------------------------------------------------
 #include <atomic>
 #include <cstdint>
+#include <iostream>
 #include <string>
 //---------------------------------------------------------------------------
 namespace utils {
@@ -76,7 +77,7 @@ static constexpr uint64_t nextPowerOf2(uint64_t v) {
   v |= v >> 32;
   v++;
   return v;
-}
+};
 //---------------------------------------------------------------------------
 /**
  *  MurmurHash64A
@@ -94,7 +95,18 @@ static constexpr uint64_t mm_hash(uint64_t k) {
   h *= m;
   h ^= h >> r;
   return h;
-}
+};
+//---------------------------------------------------------------------------
+template <typename DurationType>
+struct Timer {
+  std::chrono::high_resolution_clock::time_point start;
+  explicit Timer() : start(std::chrono::high_resolution_clock::now()) {}
+  ~Timer() {
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<DurationType>(end - start).count();
+    std::cout << duration << std::endl;
+  }
+};
 //---------------------------------------------------------------------------
 }  // namespace utils
 //---------------------------------------------------------------------------
