@@ -135,7 +135,7 @@ void VectorEngine::store_vectors() {
 void VectorEngine::load_documents_per_term() {
   std::string file_name = "documents_per_term";
   MmapedFileReader dpt_reader(file_name);
-  documents_per_term_.reserve(dpt_reader.get_size() / sizeof(uint32_t));
+  documents_per_term_.resize(dpt_reader.get_size() / sizeof(uint32_t));
   memcpy(documents_per_term_.data(), dpt_reader.begin(), dpt_reader.get_size() / sizeof(uint32_t));
 }
 
@@ -373,6 +373,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       std::cout << "inserted: " << doc_id << "\n";
     }
   }
+  hnsw_alg->saveIndex("hnsw-graph");
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
