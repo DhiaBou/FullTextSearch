@@ -141,6 +141,6 @@ stamp-h1
 *.d
 
 # Any data
-data
+data/
 *.parquet
 *.csv
