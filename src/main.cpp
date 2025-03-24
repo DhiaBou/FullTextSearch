@@ -34,6 +34,10 @@ int main(int argc, char** argv) {
   // Build the FTS-Index
   engine->indexDocuments(options.data_path);
 
+  if (options.benchmarking_mode) {
+    return 0;
+  }
+
   // Define the scoring function used to score documents
   std::unique_ptr<scoring::ScoringFunction> score_func;
   auto scoring_choice = std::move(options.scoring);
