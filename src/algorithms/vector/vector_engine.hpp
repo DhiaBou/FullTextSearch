@@ -66,9 +66,12 @@ class VectorEngine : public FullTextSearchEngine {
    * All consecutive.
    */
   void store_document_to_vector();
+
+  void store_document_to_contained_terms();
   void load_vectors();
   void load_documents_per_term();
   void load_document_to_vector();
+  void load_document_to_contained_terms();
 
   /// key is term id, value is number of documents this token appears in
   // std::unordered_map<TermID, uint32_t> documents_per_term_;

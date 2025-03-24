@@ -66,9 +66,33 @@ void VectorEngine::store_document_to_vector() {
   }
 }
 
+void VectorEngine::store_document_to_contained_terms() {
+  std::string file_name = "document_to_contained_terms";
+
+  // just take an approximate size as initial max size. It will be scaled up or down if needed.
+  MmapedFileWriter dtct(file_name.c_str(), document_to_contained_terms_.size() *
+                                               document_to_contained_terms_[0].size() *
+                                               sizeof(TermID));
+
+  // write total number of documents
+  uint32_t num_docs = static_cast<uint32_t>(document_to_contained_terms_.size());
+  dtct.write(&num_docs, sizeof(uint32_t));
+
+  for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
+    // write size of vector
+    uint32_t vector_size = static_cast<uint32_t>(document_to_contained_terms_[did].size());
+    dtct.write(&vector_size, sizeof(uint32_t));
+
+    // write vector
+    dtct.write(reinterpret_cast<const char *>(document_to_contained_terms_[did].data()),
+               document_to_contained_terms_[did].size() * sizeof(TermID));
+  }
+}
+
 void VectorEngine::store_vectors() {
   store_documents_per_term();
   store_document_to_vector();
+  store_document_to_contained_terms();
 
   // TODO: for the other vectors, store the size directly after the id, then you can just memcpy it
   // completely.
@@ -119,9 +143,32 @@ void VectorEngine::load_document_to_vector() {
   }
 }
 
+void VectorEngine::load_document_to_contained_terms() {
+  std::string file_name = "document_to_contained_terms";
+  MmapedFileReader dtct_reader(file_name);
+  const char *cur = dtct_reader.begin();
+
+  // read in total number of documents in document_to_vector
+  document_to_contained_terms_.resize(*reinterpret_cast<const uint32_t *>(cur));
+  cur += sizeof(uint32_t);
+
+  for (DocumentID did = 0; did < document_to_vector_.size(); ++did) {
+    std::vector<TermID> &vec = document_to_contained_terms_[did];
+
+    // read in the size of the vector for this document
+    vec.resize(*reinterpret_cast<const uint32_t *>(cur));
+    cur += sizeof(uint32_t);
+
+    // read in the actual vector
+    memcpy(vec.data(), cur, vec.size() * sizeof(float));
+    cur += vec.size() * sizeof(TermID);
+  }
+}
+
 void VectorEngine::load_vectors() {
   load_documents_per_term();
   load_document_to_vector();
+  load_document_to_contained_terms();
 }
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
@@ -227,12 +274,22 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   documents_per_term_.clear();
   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-  for (auto e : document_to_vector_[0]) {
+  for (auto e : document_to_vector_[1]) {
     std::cout << e << " ";
   }
   std::cout << std::endl;
   document_to_vector_.clear();
   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+            << " values.\n";
+  for (auto e : document_to_contained_terms_[1]) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  document_to_contained_terms_.clear();
+  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+            << " values.\n";
+
   load_vectors();
   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
   for (TermID tid = 0; tid < 100; ++tid) {
@@ -241,10 +298,17 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   std::cout << std::endl;
 
   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-  for (auto e : document_to_vector_[0]) {
+  for (auto e : document_to_vector_[1]) {
     std::cout << e << " ";
   }
   std::cout << std::endl;
+  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+            << " values.\n";
+  for (auto e : document_to_contained_terms_[1]) {
+    std::cout << e << " ";
+  }
+  std::cout << std::endl;
+  document_to_contained_terms_.clear();
   // TODO: end test storing vectors
 
   // insert vectors into hnsw
