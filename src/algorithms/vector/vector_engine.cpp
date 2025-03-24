@@ -339,7 +339,6 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       std::make_unique<scoring::TfIdf>(num_of_docs);
 
   // iterate through all documents
-  uint32_t debug_counter = 0;
   for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
     uint32_t num_tokens = terms_per_document_[did];
     std::vector<float> vec;
@@ -357,10 +356,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
     document_to_vector_.push_back(std::move(vec));
 
-    if (debug_counter % 10000 == 0) {
-      std::cout << debug_counter << "\n";
+    if (did % 10000 == 0) {
+      std::cout << did << "\n";
     }
-    ++debug_counter;
   }
   print_vector(document_to_vector_[2], document_to_contained_terms_[1]);
 
@@ -378,7 +376,62 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
     const std::string &query, const scoring::ScoringFunction &score_func, uint32_t num_results) {
-  throw std::runtime_error("search method is not yet implemented.");
+  DocumentID query_id = document_to_contained_terms_.size();
+
+  std::unordered_map<TermID, uint32_t> query_term_frequency;
+  std::unordered_set<TermID> unique_terms_in_query;
+  uint32_t num_tokens_in_query = 0;
+
+  tokenizer::StemmingTokenizer tokenizer(query.c_str(), query.size());
+
+  for (auto token = tokenizer.nextToken(false); !token.empty();
+       token = tokenizer.nextToken(false)) {
+    ++num_tokens_in_query;
+    if (term_to_term_id.find(token) == term_to_term_id.end()) {
+      // if the term does not occour in any of the indexed documents, then the distance to every
+      // document is the same in regard to this term, so we can just skip it.
+      continue;
+    }
+    TermID tid = term_to_term_id[token];
+    ++query_term_frequency[tid];
+    unique_terms_in_query.insert(tid);
+  }
+
+  std::vector<uint32_t> sorted_tokens(unique_terms_in_query.begin(), unique_terms_in_query.end());
+  std::sort(sorted_tokens.begin(), sorted_tokens.end());
+
+  uint32_t num_of_docs = document_to_contained_terms_.size();
+
+  std::vector<float> vec;
+  vec.reserve(sorted_tokens.size());
+
+  // iterate over all terms in this document
+  for (const auto tid : sorted_tokens) {
+    vec.push_back((float)score_func.score({num_tokens_in_query},
+                                          {query_term_frequency[tid], documents_per_term_[tid]}));
+  }
+
+  // query data is only inserted for the time of the query.
+  document_to_contained_terms_.push_back(std::move(sorted_tokens));
+  document_to_vector_.push_back(std::move(vec));
+
+  std::priority_queue<std::pair<float, size_t>> pq = hnsw_alg->searchKnn(&query_id, num_results);
+
+  // remove query data
+  document_to_contained_terms_.pop_back();
+  document_to_vector_.pop_back();
+
+  std::vector<std::pair<DocumentID, double>> res;
+  res.resize(num_results);
+  size_t i = num_results;
+  while (!pq.empty()) {
+    auto [dist, id] = pq.top();
+
+    res[--i] = {id, dist};
+    pq.pop();
+  }
+
+  return res;
 }
 
 uint32_t VectorEngine::getDocumentCount() {
