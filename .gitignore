@@ -140,5 +140,7 @@ stamp-h1
 # Custom build artifacts
 *.d
 
+# Any data
+data
 *.parquet
 *.csv
