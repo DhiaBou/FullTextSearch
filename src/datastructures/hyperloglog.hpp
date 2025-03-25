@@ -6,7 +6,6 @@
 
 template <typename T>
 class HyperLogLog {
-
   static constexpr uint64_t CONSIDERED_TRAILING_BITS = 7;
   static constexpr uint64_t NUM_REGISTERS = 1ULL << CONSIDERED_TRAILING_BITS;
   static constexpr double ALPHA_M = 0.7213 / (1.0 + 1.079 / NUM_REGISTERS);
@@ -21,7 +20,7 @@ class HyperLogLog {
     return static_cast<double>(vals.size()) / denominator;
   }
 
-public:
+ public:
   explicit HyperLogLog(size_t num_threads) {
     trailing_zeros = std::vector(num_threads, std::vector<uint64_t>(NUM_REGISTERS, 0));
   }
@@ -38,8 +37,8 @@ public:
   uint64_t getCount() {
     std::vector<uint64_t> res(NUM_REGISTERS, 0);
 
-    for (size_t i=0; i < trailing_zeros.size(); ++i) {
-      for (size_t j=0; j < trailing_zeros[i].size(); ++j) {
+    for (size_t i = 0; i < trailing_zeros.size(); ++i) {
+      for (size_t j = 0; j < trailing_zeros[i].size(); ++j) {
         res[j] = std::max(res[j], trailing_zeros[i][j] + 1);
       }
     }
@@ -47,9 +46,8 @@ public:
     return static_cast<uint64_t>(ALPHA_M * NUM_REGISTERS * harmonicMean(res));
   }
 
-private:
+ private:
   std::vector<std::vector<uint64_t>> trailing_zeros;
 };
 
-
-#endif //HYPERLOGLOG_H
+#endif  // HYPERLOGLOG_H
