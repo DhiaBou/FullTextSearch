@@ -29,6 +29,8 @@ add_library(fts_lib
         src/scoring/bm25.cpp
         src/scoring/tf_idf.hpp
         src/scoring/tf_idf.cpp
+        src/scoring/tf_idf_gensim.hpp
+        src/scoring/tf_idf_gensim.cpp
         src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.cpp

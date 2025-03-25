@@ -1,5 +1,6 @@
 #include "vector_engine.hpp"
 
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -9,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../scoring/tf_idf.hpp"
+#include "../../scoring/tf_idf_gensim.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 #include "./file_io.hpp"
 #include "algorithms/vector/index/hnsw/spaces/l2_space.hpp"
@@ -271,6 +272,17 @@ void VectorEngine::test_store_and_load() {
   std::cout << std::endl;
 }
 
+void VectorEngine::normalize_vector(std::vector<float> &v) {
+  float sum = 0;
+  for (int i = 0; i < v.size(); ++i) {
+    sum += v[i] * v[i];
+  }
+  double norm = std::sqrt(sum);
+  for (int i = 0; i < v.size(); ++i) {
+    v[i] = v[i] / norm;
+  }
+}
+
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // key is term id, value is a map of doc id to term frequency
   // needed only to build the vectors
@@ -336,7 +348,7 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
   // create the tf_idf vectors for each document
   uint32_t num_of_docs = terms_per_document_.size();
   std::unique_ptr<scoring::ScoringFunction> score_func =
-      std::make_unique<scoring::TfIdf>(num_of_docs);
+      std::make_unique<scoring::TfIdfGensim>(num_of_docs);
 
   // iterate through all documents
   for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
@@ -352,7 +364,11 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     for (const auto tid : document_to_contained_terms_[did]) {
       vec.push_back((float)score_func->score(
           {num_tokens}, {term_frequency_per_document_[tid][did], documents_per_term_[tid]}));
+      std::cout << "did: " << did << ", tid: " << tid
+                << ", frequency: " << term_frequency_per_document_[tid][did]
+                << ", score: " << vec[vec.size() - 1] << "\n";
     }
+    normalize_vector(vec);
 
     document_to_vector_.push_back(std::move(vec));
 
@@ -360,9 +376,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       std::cout << did << "\n";
     }
   }
-  print_vector(document_to_vector_[2], document_to_contained_terms_[1]);
+  print_vector(document_to_vector_[0], document_to_contained_terms_[0]);
 
-  test_store_and_load();
+  // test_store_and_load();
 
   // insert vectors into hnsw
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
@@ -410,6 +426,8 @@ std::vector<std::pair<DocumentID, double>> VectorEngine::search(
     vec.push_back((float)score_func.score({num_tokens_in_query},
                                           {query_term_frequency[tid], documents_per_term_[tid]}));
   }
+
+  normalize_vector(vec);
 
   // query data is only inserted for the time of the query.
   document_to_contained_terms_.push_back(std::move(sorted_tokens));

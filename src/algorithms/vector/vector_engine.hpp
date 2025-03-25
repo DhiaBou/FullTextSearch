@@ -101,6 +101,8 @@ class VectorEngine : public FullTextSearchEngine {
   void test_store_and_load();
 
   hnsw::L2SpaceDocId space;
+
+  void normalize_vector(std::vector<float> &v);
 };
 
 #endif  // VECTORSPACEMODELENGINE_HPP

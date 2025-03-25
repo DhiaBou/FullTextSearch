@@ -11,6 +11,7 @@
 #include "scoring/bm25.hpp"
 #include "scoring/scoring_function.hpp"
 #include "scoring/tf_idf.hpp"
+#include "scoring/tf_idf_gensim.hpp"
 
 int main(int argc, char** argv) {
   cxxopts::Options options("Fulltext search",
@@ -58,7 +59,11 @@ int main(int argc, char** argv) {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
   } else if (scoring_choice == "tf-idf") {
-    score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
+    if (algorithm_choice == "vector") {
+      score_func = std::make_unique<scoring::TfIdfGensim>(engine->getDocumentCount());
+    } else {
+      score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
+    }
   } else {
     std::cout << options.help() << std::endl;
     return 1;
