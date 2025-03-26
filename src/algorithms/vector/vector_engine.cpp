@@ -364,9 +364,9 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     for (const auto tid : document_to_contained_terms_[did]) {
       vec.push_back((float)score_func->score(
           {num_tokens}, {term_frequency_per_document_[tid][did], documents_per_term_[tid]}));
-      std::cout << "did: " << did << ", tid: " << tid
-                << ", frequency: " << term_frequency_per_document_[tid][did]
-                << ", score: " << vec[vec.size() - 1] << "\n";
+      // std::cout << "did: " << did << ", tid: " << tid
+      //           << ", frequency: " << term_frequency_per_document_[tid][did]
+      //           << ", score: " << vec[vec.size() - 1] << "\n";
     }
     normalize_vector(vec);
 
@@ -377,6 +377,8 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     }
   }
   print_vector(document_to_vector_[0], document_to_contained_terms_[0]);
+  print_vector(document_to_vector_[1], document_to_contained_terms_[1]);
+  print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
 
   // test_store_and_load();
 

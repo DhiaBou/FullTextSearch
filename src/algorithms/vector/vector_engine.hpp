@@ -14,8 +14,9 @@
 
 #include "../../fts_engine.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
+#include "index/hnsw/spaces/cosine_space_sparse.hpp"
 #include "index/hnsw/spaces/l2_space.hpp"
-#include "index/hnsw/spaces/l2_space_doc_id.hpp"
+#include "index/hnsw/spaces/l2_space_sparse.hpp"
 
 namespace hnsw = vectorlib::hnsw;
 
@@ -100,7 +101,7 @@ class VectorEngine : public FullTextSearchEngine {
   /// TODO: Only needed for debugging and testing
   void test_store_and_load();
 
-  hnsw::L2SpaceDocId space;
+  hnsw::CosineSpaceSparse space;
 
   void normalize_vector(std::vector<float> &v);
 };
