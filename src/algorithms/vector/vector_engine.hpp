@@ -36,6 +36,7 @@ class VectorEngine : public FullTextSearchEngine {
   uint32_t getDocumentCount() override;
 
   double getAvgDocumentLength() override;
+  void insert(DocumentID min_id, DocumentID max_id);
 
  private:
   int dim = 1;                  // Dimension of the elements

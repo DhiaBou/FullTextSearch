@@ -8,13 +8,13 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
 #include "../../scoring/tf_idf_gensim.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 #include "./file_io.hpp"
-#include "algorithms/vector/index/hnsw/spaces/l2_space.hpp"
 #include "fts_engine.hpp"
 
 namespace hnsw = vectorlib::hnsw;
@@ -375,13 +375,14 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       std::cout << did << "\n";
     }
   }
-  print_vector(document_to_vector_[0], document_to_contained_terms_[0]);
-  print_vector(document_to_vector_[1], document_to_contained_terms_[1]);
-  print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
+  // print_vector(document_to_vector_[0], document_to_contained_terms_[0]);
+  // print_vector(document_to_vector_[1], document_to_contained_terms_[1]);
+  // print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
 
   // test_store_and_load();
 
   // insert vectors into hnsw
+
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
     if (doc_id % 10000 == 0) {
@@ -389,7 +390,35 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
     }
   }
 
+  // unsigned threadCount = std::thread::hardware_concurrency();
+  // std::vector<std::thread> threads;
+  // threads.reserve(threadCount);
+  // uint32_t num_docs_to_insert = document_to_contained_terms_.size() / threadCount;
+
+  // for (unsigned thread_id = 0; thread_id < threadCount - 1; ++thread_id) {
+  //   threads.emplace_back([this, thread_id, num_docs_to_insert]() {
+  //     this->insert(thread_id * num_docs_to_insert, (thread_id + 1) * num_docs_to_insert);
+  //   });
+  // }
+
+  // threads.emplace_back([this, threadCount, num_docs_to_insert]() {
+  //   this->insert((threadCount - 1) * num_docs_to_insert, document_to_contained_terms_.size());
+  // });
+
+  // for (auto &thread : threads) {
+  //   thread.join();
+  // }
+
   store();
+}
+
+void VectorEngine::insert(DocumentID min_id_inclusive, DocumentID max_id_exclusive) {
+  for (DocumentID doc_id = min_id_inclusive; doc_id < max_id_exclusive; ++doc_id) {
+    hnsw_alg->addPoint(&doc_id, doc_id);
+    if (doc_id % 10000 == 0) {
+      std::cout << "inserted: " << doc_id << "\n";
+    }
+  }
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
