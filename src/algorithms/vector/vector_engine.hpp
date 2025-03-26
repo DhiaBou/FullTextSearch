@@ -49,9 +49,7 @@ class VectorEngine : public FullTextSearchEngine {
 
   // prints how often a token occurs in this vector
   void print_vector(std::vector<float> values, std::vector<TermID> terms);
-  // std::vector<float> compress_vector(std::vector<float> v);
-  // std::vector<float> decompress_vector(std::vector<float> v);
-  void store_vectors();
+  void store();
 
   /**
    * Stores the vector @documents_per_term with the following scheme:
@@ -59,25 +57,26 @@ class VectorEngine : public FullTextSearchEngine {
    * total number of terms can be determined from the size of the file.
    * term_id can be determined from the location in the array.
    */
-  void store_documents_per_term();
+  void store_documents_per_term(std::string &file_name);
 
   /**
    * Stores the vector @document_to_vector_ with the following scheme:
    * [num_of_documents_in_total][size_of_first_vector][first_value_of_first_vector][second_value_of_first_vector]...[last_value_of_first_vector][size_of_second_vector]
    * All consecutive.
    */
-  void store_document_to_vector();
+  void store_document_to_vector(std::string &file_name);
 
-  void store_document_to_contained_terms();
+  void store_document_to_contained_terms(std::string &file_name);
   /**
    * This function suffices. There is no need for a function to store term_to_term_id.
    */
-  void store_term_id_to_term();
-  void load_vectors();
-  void load_documents_per_term();
-  void load_document_to_vector();
-  void load_document_to_contained_terms();
-  void load_term_id_to_term();
+  void store_term_id_to_term(std::string &file_name);
+
+  bool load();
+  void load_documents_per_term(std::string &file_name);
+  void load_document_to_vector(std::string &file_name);
+  void load_document_to_contained_terms(std::string &file_name);
+  void load_term_id_to_term(std::string &file_name);
 
   /// key is term id, value is number of documents this token appears in
   // std::unordered_map<TermID, uint32_t> documents_per_term_;
@@ -99,7 +98,7 @@ class VectorEngine : public FullTextSearchEngine {
   std::vector<std::string> term_id_to_term;
 
   /// TODO: Only needed for debugging and testing
-  void test_store_and_load();
+  // void test_store_and_load();
 
   hnsw::CosineSpaceSparse space;
 

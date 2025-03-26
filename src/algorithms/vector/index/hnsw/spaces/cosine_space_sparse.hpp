@@ -44,20 +44,27 @@ class CosineSparseFunctor {
     auto values2_it = values2.begin();
 
     while (terms1_it != terms1.end() && terms2_it != terms2.end()) {
-      if (*terms1_it == *terms2_it) {
-        float t = *values1_it * *values2_it;
-        res += t * t;
-        ++values1_it;
-        ++values2_it;
-        ++terms1_it;
-        ++terms2_it;
-      } else if (*terms1_it < *terms2_it) {
-        ++terms1_it;
-        ++values1_it;
-      } else {
-        ++terms2_it;
-        ++values2_it;
-      }
+      TermID t1 = *terms1_it;
+      TermID t2 = *terms2_it;
+      res += t1 == t2 ? *values1_it * *values2_it : 0;
+      terms1_it += t1 <= t2 ? 1 : 0;
+      terms2_it += t1 >= t2 ? 1 : 0;
+      values1_it += t1 <= t2 ? 1 : 0;
+      values2_it += t1 >= t2 ? 1 : 0;
+      // if (*terms1_it == *terms2_it) {
+      //   float t = *values1_it * *values2_it;
+      //   res += t;
+      //   ++values1_it;
+      //   ++values2_it;
+      //   ++terms1_it;
+      //   ++terms2_it;
+      // } else if (*terms1_it < *terms2_it) {
+      //   ++terms1_it;
+      //   ++values1_it;
+      // } else {
+      //   ++terms2_it;
+      //   ++values2_it;
+      // }
     }
 
     return 1 - res;

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -35,18 +36,13 @@ void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> c
   std::cout << "\n";
 }
 
-// std::vector<float> VectorEngine::decompress_vector(std::vector<float> v) {}
-
-void VectorEngine::store_documents_per_term() {
-  std::string file_name = "documents_per_term";
+void VectorEngine::store_documents_per_term(std::string &file_name) {
   MmapedFileWriter dpt(file_name.c_str(), documents_per_term_.size() * sizeof(uint32_t));
   dpt.write(reinterpret_cast<const char *>(documents_per_term_.data()),
             documents_per_term_.size() * sizeof(uint32_t));
 }
 
-void VectorEngine::store_document_to_vector() {
-  std::string file_name = "document_to_vector";
-
+void VectorEngine::store_document_to_vector(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter dtv(file_name.c_str(),
                        document_to_vector_.size() * document_to_vector_[0].size() * sizeof(float));
@@ -68,9 +64,7 @@ void VectorEngine::store_document_to_vector() {
   }
 }
 
-void VectorEngine::store_document_to_contained_terms() {
-  std::string file_name = "document_to_contained_terms";
-
+void VectorEngine::store_document_to_contained_terms(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter dtct(file_name.c_str(), document_to_contained_terms_.size() *
                                                document_to_contained_terms_[0].size() *
@@ -91,9 +85,7 @@ void VectorEngine::store_document_to_contained_terms() {
   }
 }
 
-void VectorEngine::store_term_id_to_term() {
-  std::string file_name = "term_id_to_term";
-
+void VectorEngine::store_term_id_to_term(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter titt(file_name.c_str(),
                         term_id_to_term.size() * term_id_to_term[0].size() * sizeof(char));
@@ -109,39 +101,51 @@ void VectorEngine::store_term_id_to_term() {
   }
 }
 
-void VectorEngine::store_vectors() {
-  store_documents_per_term();
-  store_document_to_vector();
-  store_document_to_contained_terms();
-  store_term_id_to_term();
-
-  // TODO: for the other vectors, store the size directly after the id, then you can just memcpy it
-  // completely.
-  // TODO: since TermID and DocumentID are consecutive, don't use a hashmap, but just a vector.
-  // Preallocate their sizes.
-
-  // size_t initial_max_size = 1024L * 1024;
-  // std::string document_to_vector_fname = "document_to_vector.csv";
-  // std::string document_to_contained_terms_fname = "document_to_contained_terms.csv";
-  // std::string term_to_term_id_fname = "term_to_term_id.csv";
-  // std::string term_id_to_term_fname = "term_id_to_term.csv";
-
-  // // create mmaped files
-  // MmapedFile dtv(document_to_vector_fname.c_str(), initial_max_size);
-  // MmapedFile dtct(document_to_contained_terms_fname.c_str(), initial_max_size);
-  // MmapedFile ttti(term_to_term_id_fname.c_str(), initial_max_size);
-  // MmapedFile titt(term_id_to_term_fname.c_str(), initial_max_size);
+void VectorEngine::store() {
+  std::string dir_name = "stored_hnsw";
+  std::string dpt_fn = dir_name + "/documents_per_term";
+  std::string dtv_fn = dir_name + "/document_to_vector";
+  std::string dtct_fn = dir_name + "/document_to_contained_terms";
+  std::string titt_fn = dir_name + "/term_id_to_term";
+  std::string hnsw_fn = dir_name + "/hnsw-graph";
+  store_documents_per_term(dpt_fn);
+  store_document_to_vector(dtv_fn);
+  store_document_to_contained_terms(dtct_fn);
+  store_term_id_to_term(titt_fn);
+  hnsw_alg->saveIndex(hnsw_fn);
 }
 
-void VectorEngine::load_documents_per_term() {
-  std::string file_name = "documents_per_term";
+bool VectorEngine::load() {
+  std::string dir_name = "stored_hnsw";
+  std::string dpt_fn = dir_name + "/documents_per_term";
+  std::string dtv_fn = dir_name + "/document_to_vector";
+  std::string dtct_fn = dir_name + "/document_to_contained_terms";
+  std::string titt_fn = dir_name + "/term_id_to_term";
+  std::string hnsw_fn = dir_name + "/hnsw-graph";
+
+  if (fs::exists(dir_name) && fs::is_directory(dir_name) && fs::exists(dpt_fn) &&
+      fs::exists(dtv_fn) && fs::exists(dtct_fn) && fs::exists(titt_fn) && fs::exists(hnsw_fn)) {
+    load_documents_per_term(dpt_fn);
+    load_document_to_vector(dtv_fn);
+    load_document_to_contained_terms(dtct_fn);
+    load_term_id_to_term(titt_fn);
+    hnsw_alg->loadIndex(hnsw_fn, static_cast<vectorlib::SpaceInterface<float> *>(&space),
+                        max_elements);
+    return true;
+  } else {
+    fs::remove_all(dir_name);
+    fs::create_directory(dir_name);
+    return false;
+  }
+}
+
+void VectorEngine::load_documents_per_term(std::string &file_name) {
   MmapedFileReader dpt_reader(file_name);
   documents_per_term_.resize(dpt_reader.get_size() / sizeof(uint32_t));
   memcpy(documents_per_term_.data(), dpt_reader.begin(), dpt_reader.get_size() / sizeof(uint32_t));
 }
 
-void VectorEngine::load_document_to_vector() {
-  std::string file_name = "document_to_vector";
+void VectorEngine::load_document_to_vector(std::string &file_name) {
   MmapedFileReader dtv_reader(file_name);
   const char *cur = dtv_reader.begin();
 
@@ -164,8 +168,7 @@ void VectorEngine::load_document_to_vector() {
   }
 }
 
-void VectorEngine::load_document_to_contained_terms() {
-  std::string file_name = "document_to_contained_terms";
+void VectorEngine::load_document_to_contained_terms(std::string &file_name) {
   MmapedFileReader dtct_reader(file_name);
   const char *cur = dtct_reader.begin();
 
@@ -186,8 +189,7 @@ void VectorEngine::load_document_to_contained_terms() {
   }
 }
 
-void VectorEngine::load_term_id_to_term() {
-  std::string file_name = "term_id_to_term";
+void VectorEngine::load_term_id_to_term(std::string &file_name) {
   MmapedFileReader titt_reader(file_name);
   const char *cur = titt_reader.begin();
 
@@ -205,72 +207,65 @@ void VectorEngine::load_term_id_to_term() {
   }
 }
 
-void VectorEngine::load_vectors() {
-  load_documents_per_term();
-  load_document_to_vector();
-  load_document_to_contained_terms();
-  load_term_id_to_term();
-}
+// void VectorEngine::test_store_and_load() {
+//   store();
+//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
+//   for (TermID tid = 0; tid < 100; ++tid) {
+//     std::cout << documents_per_term_[tid] << " ";
+//   }
+//   std::cout << std::endl;
+//   documents_per_term_.clear();
+//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
+//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+//   for (auto e : document_to_vector_[1]) {
+//     std::cout << e << " ";
+//   }
+//   std::cout << std::endl;
+//   document_to_vector_.clear();
+//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+//             << " values.\n";
+//   for (auto e : document_to_contained_terms_[1]) {
+//     std::cout << e << " ";
+//   }
+//   std::cout << std::endl;
+//   document_to_contained_terms_.clear();
+//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+//             << " values.\n";
 
-void VectorEngine::test_store_and_load() {
-  store_vectors();
-  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-  for (TermID tid = 0; tid < 100; ++tid) {
-    std::cout << documents_per_term_[tid] << " ";
-  }
-  std::cout << std::endl;
-  documents_per_term_.clear();
-  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-  for (auto e : document_to_vector_[1]) {
-    std::cout << e << " ";
-  }
-  std::cout << std::endl;
-  document_to_vector_.clear();
-  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-            << " values.\n";
-  for (auto e : document_to_contained_terms_[1]) {
-    std::cout << e << " ";
-  }
-  std::cout << std::endl;
-  document_to_contained_terms_.clear();
-  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-            << " values.\n";
+//   for (int i = 0; i < 10; ++i) {
+//     std::cout << term_id_to_term[i] << " ";
+//     std::cout << term_to_term_id[term_id_to_term[i]] << " ";
+//   }
+//   std::cout << std::endl;
+//   term_id_to_term.clear();
+//   term_to_term_id.clear();
 
-  for (int i = 0; i < 10; ++i) {
-    std::cout << term_id_to_term[i] << " ";
-    std::cout << term_to_term_id[term_id_to_term[i]] << " ";
-  }
-  std::cout << std::endl;
-  term_id_to_term.clear();
-  term_to_term_id.clear();
+//   load_vectors();
+//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
+//   for (TermID tid = 0; tid < 100; ++tid) {
+//     std::cout << documents_per_term_[tid] << " ";
+//   }
+//   std::cout << std::endl;
 
-  load_vectors();
-  std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-  for (TermID tid = 0; tid < 100; ++tid) {
-    std::cout << documents_per_term_[tid] << " ";
-  }
-  std::cout << std::endl;
+//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
+//   for (auto e : document_to_vector_[1]) {
+//     std::cout << e << " ";
+//   }
+//   std::cout << std::endl;
+//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
+//             << " values.\n";
+//   for (auto e : document_to_contained_terms_[1]) {
+//     std::cout << e << " ";
+//   }
+//   std::cout << std::endl;
 
-  std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-  for (auto e : document_to_vector_[1]) {
-    std::cout << e << " ";
-  }
-  std::cout << std::endl;
-  std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-            << " values.\n";
-  for (auto e : document_to_contained_terms_[1]) {
-    std::cout << e << " ";
-  }
-  std::cout << std::endl;
-
-  for (int i = 0; i < 10; ++i) {
-    std::cout << term_id_to_term[i] << " ";
-    std::cout << term_to_term_id[term_id_to_term[i]] << " ";
-  }
-  std::cout << std::endl;
-}
+//   for (int i = 0; i < 10; ++i) {
+//     std::cout << term_id_to_term[i] << " ";
+//     std::cout << term_to_term_id[term_id_to_term[i]] << " ";
+//   }
+//   std::cout << std::endl;
+// }
 
 void VectorEngine::normalize_vector(std::vector<float> &v) {
   float sum = 0;
@@ -284,6 +279,10 @@ void VectorEngine::normalize_vector(std::vector<float> &v) {
 }
 
 void VectorEngine::indexDocuments(DocumentIterator doc_it) {
+  if (load()) {
+    std::cout << "HNSW index loaded from save file.\n";
+    return;
+  }
   // key is term id, value is a map of doc id to term frequency
   // needed only to build the vectors
   std::unordered_map<TermID, std::unordered_map<DocumentID, uint32_t>> term_frequency_per_document_;
@@ -389,7 +388,8 @@ void VectorEngine::indexDocuments(DocumentIterator doc_it) {
       std::cout << "inserted: " << doc_id << "\n";
     }
   }
-  hnsw_alg->saveIndex("hnsw-graph");
+
+  store();
 }
 
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
