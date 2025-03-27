@@ -15,6 +15,7 @@
 #include "../../scoring/tf_idf_gensim.hpp"
 #include "../../tokenizer/stemmingtokenizer.hpp"
 #include "./file_io.hpp"
+#include "algorithms/vector/index/hnsw/spaces/cosine_space_sparse.hpp"
 #include "fts_engine.hpp"
 
 namespace hnsw = vectorlib::hnsw;
@@ -491,6 +492,16 @@ double VectorEngine::getAvgDocumentLength() {
 }
 
 uint64_t VectorEngine::footprint() {
-  // TODO
-  return 0;
+  uint64_t fp = documents_per_term_.size() * sizeof(uint32_t);
+  for (auto &v : document_to_vector_) {
+    fp += (v.size() * sizeof(float));
+  }
+  for (auto &v : document_to_contained_terms_) {
+    fp += (v.size() * sizeof(TermID));
+  }
+  for (auto &[s, t] : term_to_term_id) {
+    fp += 2 * s.size() + sizeof(uint32_t);  // count size of the string twice, because it is
+                                            // contained in term_id_to_term as well
+  }
+  return fp;
 }
