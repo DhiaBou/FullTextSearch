@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
 
@@ -20,37 +21,43 @@ namespace fs = std::filesystem;
 class DocumentIterator {
  public:
   /// Constructor.
-  explicit DocumentIterator(const std::string &folder_path);
-  /// Prefix increment operator.
-  void operator++();
-  /// Postfix increment operator.
-  void operator++(int);
-  /// Dereference operator.
-  std::shared_ptr<Document> operator*();
-  /// Whether there is another document.
-  bool hasNext();
+  explicit DocumentIterator(const std::string &folder_path, uint32_t batch_size = 128);
+
+  /// @brief Produces the next batch of documents.
+  /// @return The produced batch of documents.
+  /// Empty if there are no documents left.
+  std::vector<Document> next();
 
  private:
   /// Load the next file in the given directory.
-  void loadNextFile();
-  /// Load the next batch of rows.
-  bool loadNextBatch();
+  /// @return False if there is no file left.
+  bool loadNextFile();
+  /// Load the next row group.
+  /// @return False if there is no row group left.
+  bool loadNextRowGroup();
+  /// Read raw data within provided borders into the document vector.
+  void readBatch(size_t start, size_t num_rows, std::vector<Document> &docs) const;
 
   /// A queue of parquet files contained in the specified directory.
   std::queue<std::string> file_queue;
   /// An abstraction used to read parquet files into arrow batches.
   std::unique_ptr<parquet::arrow::FileReader> arrow_reader;
-  /// An abstraction used to read rows into arrow batches.
-  std::shared_ptr<arrow::RecordBatchReader> batch_reader;
-  /// The current batch the iterator is working on.
-  std::shared_ptr<arrow::RecordBatch> current_batch;
-  /// The current batch's raw data.
-  std::shared_ptr<arrow::BinaryArray> data_array;
+  /// The current batch's raw content data.
+  std::shared_ptr<arrow::BinaryArray> content_array;
+  /// The current batch's raw document ID data.
   std::shared_ptr<arrow::UInt32Array> doc_id_array;
-  /// The current row of the iterator's current batch.
-  int64_t current_row_index = 0;
-  /// The total number of rows in the iterator's current batch.
-  int64_t total_rows_in_batch = 0;
+
+  /// The number of row groups in current file.
+  uint32_t num_row_groups;
+  /// The current row group.
+  uint32_t row_group_index;
+  /// The number of documents in a single batch.
+  uint32_t batch_size;
+  /// The index of the current row batch.
+  uint32_t row_batch_index;
+
+  /// A global lock on the next function to sychronize multiple threads.
+  std::mutex global_lock;
 };
 
 #endif  // DOCUMENT_ITERATOR_HPP

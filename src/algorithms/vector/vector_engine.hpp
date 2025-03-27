@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../../documents/document_iterator_old.hpp"
 #include "../../fts_engine.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
 #include "index/hnsw/spaces/cosine_space_sparse.hpp"
@@ -27,7 +28,7 @@ class VectorEngine : public FullTextSearchEngine {
   VectorEngine();
 
   ~VectorEngine();
-  void indexDocuments(DocumentIterator it) override;
+  void indexDocuments(std::string &data_path) override;
 
   std::vector<std::pair<DocumentID, double>> search(const std::string &query,
                                                     const scoring::ScoringFunction &score_func,
@@ -37,6 +38,7 @@ class VectorEngine : public FullTextSearchEngine {
 
   double getAvgDocumentLength() override;
   void insert(DocumentID min_id, DocumentID max_id);
+  uint64_t footprint() override;
 
  private:
   int dim = 1;                  // Dimension of the elements

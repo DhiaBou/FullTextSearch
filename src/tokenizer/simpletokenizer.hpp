@@ -20,6 +20,8 @@ class SimpleTokenizer : public ITokenizer {
   const char* data_;
   size_t size_;
   size_t currentPos_;
+
+  std::string tokenBuffer_;
 };
 }  // namespace tokenizer
 #endif  // SIMPLETOKENIZER_HPP

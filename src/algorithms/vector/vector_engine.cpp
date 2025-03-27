@@ -278,7 +278,8 @@ void VectorEngine::normalize_vector(std::vector<float> &v) {
   }
 }
 
-void VectorEngine::indexDocuments(DocumentIterator doc_it) {
+void VectorEngine::indexDocuments(std::string &data_path) {
+  DocumentIteratorOld doc_it(data_path);
   if (load()) {
     std::cout << "HNSW index loaded from save file.\n";
     return;
@@ -487,4 +488,9 @@ uint32_t VectorEngine::getDocumentCount() { return document_to_vector_.size(); }
 
 double VectorEngine::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
+}
+
+uint64_t VectorEngine::footprint() {
+  // TODO
+  return 0;
 }
