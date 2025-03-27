@@ -16,7 +16,6 @@
 #include <json/json.h>
 #include <json/writer.h>
 #include <format>
-
 //---------------------------------------------------------------------------
 using idx_t = vectorlib::labeltype;
 namespace hnsw = vectorlib::hnsw;
@@ -30,18 +29,18 @@ VectorEngine::~VectorEngine() {
   hnsw_alg->saveIndex("hnswIndex.bin");
   delete hnsw_alg;
 }
-
+//---------------------------------------------------------------------------
 // Function to combine document ID and chunk ID into a single index ID
 inline idx_t combineIds(uint32_t docId, uint32_t chunkId) {
     // Use the lower 32 bits for the document ID and the next 32 bits for the chunk ID
     return (static_cast<idx_t>(chunkId) << 32) | static_cast<idx_t>(docId);
 }
-
+//---------------------------------------------------------------------------
 // Function to extract document ID from a combined ID
 inline uint32_t getDocId(idx_t combinedId) {
     return static_cast<uint32_t>(combinedId & 0xFFFFFFFF);
 }
-
+//---------------------------------------------------------------------------
 // Function to extract chunk ID from a combined ID
 inline uint32_t getChunkId(idx_t combinedId) {
     return static_cast<uint32_t>(combinedId >> 32);
@@ -149,11 +148,8 @@ static bool getEmbeddings(const char* text, size_t text_length,
         }
         return false;
     }
-    
-    // Text is too large, we need to chunk it
-    //std::cout << "Document size " << text_length << " exceeds limit. Chunking..." << std::endl;
-    
-    // Split text into manageable chunks
+        
+    // Text is to long, split into manageable chunks
     for (size_t i = 0; i < text_length; i += MAX_CHUNK_SIZE) {
       size_t chunk_size = std::min(MAX_CHUNK_SIZE, text_length - i);
       
@@ -167,7 +163,6 @@ static bool getEmbeddings(const char* text, size_t text_length,
       
       std::vector<float> chunk_embedding;
       if (getSingleEmbedding(chunk, chunk_embedding)) {
-          // Use the original doc_id for now - you might want to create chunk-specific IDs
           chunk_embeddings.push_back({chunk_embedding});
       } else {
           std::cerr << "Failed to get embedding for a chunk, skipping" << std::endl;
@@ -201,7 +196,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
 
         for (Document &doc : current_batch) {
           DocumentID doc_id = doc.getId();
-          // std::cout << std::format("#{} - DocID {} of size {}", doc_count,  doc.getId(), doc.getSize()) << std::endl;
           ++doc_count;
 
           chunk_embeddings.clear();
@@ -218,8 +212,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
         }
 
         current_batch = doc_it.next();
-
-        // std::cout << std::format("Indexed around {} documents so far.\n", counter);
       }
     });
   }
@@ -232,7 +224,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
   std::chrono::duration<double> elapsed_time = end_time - start_time;
 
   std::cout << std::format("Indexing completed in {:.2f} seconds\n", elapsed_time.count());
-
 }
 //---------------------------------------------------------------------------
 std::vector<std::pair<DocumentID, double>> VectorEngine::search(
