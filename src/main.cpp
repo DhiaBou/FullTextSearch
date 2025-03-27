@@ -6,7 +6,7 @@
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
-#include "algorithms/vector/vector_engine.hpp"
+#include "algorithms/vector/vector_engine_tfidf.hpp"
 #include "documents/document_iterator.hpp"
 //---------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   auto algorithm_choice = std::move(options.algorithm);
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vector") {
-    engine = std::make_unique<VectorEngine>();
+    engine = std::make_unique<VectorEngineTfidf>();
   } else if (algorithm_choice == "inverted") {
     engine = std::make_unique<InvertedIndexEngine>();
   } else if (algorithm_choice == "trigram") {

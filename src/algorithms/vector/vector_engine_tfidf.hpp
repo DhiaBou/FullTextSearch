@@ -2,8 +2,8 @@
 // Created by fts on 10/31/24.
 //
 
-#ifndef VECTORSPACEMODELENGINE_HPP
-#define VECTORSPACEMODELENGINE_HPP
+#ifndef VECTORSPACEMODELENGINE_TFIDF_HPP
+#define VECTORSPACEMODELENGINE_TFIDF_HPP
 
 #include <sys/types.h>
 
@@ -23,11 +23,11 @@ namespace hnsw = vectorlib::hnsw;
 
 using TermID = uint32_t;
 
-class VectorEngine : public FullTextSearchEngine {
+class VectorEngineTfidf : public FullTextSearchEngine {
  public:
-  VectorEngine();
+  VectorEngineTfidf();
 
-  ~VectorEngine();
+  ~VectorEngineTfidf();
   void indexDocuments(std::string &data_path) override;
 
   std::vector<std::pair<DocumentID, double>> search(const std::string &query,
@@ -104,4 +104,4 @@ class VectorEngine : public FullTextSearchEngine {
   void normalize_vector(std::vector<float> &v);
 };
 
-#endif  // VECTORSPACEMODELENGINE_HPP
+#endif  // VECTORSPACEMODELENGINE_TFIDF_HPP

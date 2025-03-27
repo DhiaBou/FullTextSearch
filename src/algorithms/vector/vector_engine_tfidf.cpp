@@ -1,4 +1,4 @@
-#include "vector_engine.hpp"
+#include "vector_engine_tfidf.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -20,26 +20,28 @@
 
 namespace hnsw = vectorlib::hnsw;
 
-VectorEngine::VectorEngine() : space(dim, document_to_vector_, document_to_contained_terms_) {
+VectorEngineTfidf::VectorEngineTfidf()
+    : space(dim, document_to_vector_, document_to_contained_terms_) {
   hnsw_alg = new hnsw::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
 }
 
-VectorEngine::~VectorEngine() { delete hnsw_alg; }
+VectorEngineTfidf::~VectorEngineTfidf() { delete hnsw_alg; }
 
-void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> contained_terms) {
+void VectorEngineTfidf::print_vector(std::vector<float> values,
+                                     std::vector<TermID> contained_terms) {
   for (int i = 0; i < contained_terms.size(); ++i) {
     std::cout << term_id_to_term[contained_terms[i]] << ": " << values[i] << "; ";
   }
   std::cout << "\n";
 }
 
-void VectorEngine::store_documents_per_term(std::string &file_name) {
+void VectorEngineTfidf::store_documents_per_term(std::string &file_name) {
   MmapedFileWriter dpt(file_name.c_str(), documents_per_term_.size() * sizeof(uint32_t));
   dpt.write(reinterpret_cast<const char *>(documents_per_term_.data()),
             documents_per_term_.size() * sizeof(uint32_t));
 }
 
-void VectorEngine::store_document_to_vector(std::string &file_name) {
+void VectorEngineTfidf::store_document_to_vector(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter dtv(file_name.c_str(),
                        document_to_vector_.size() * document_to_vector_[0].size() * sizeof(float));
@@ -61,7 +63,7 @@ void VectorEngine::store_document_to_vector(std::string &file_name) {
   }
 }
 
-void VectorEngine::store_document_to_contained_terms(std::string &file_name) {
+void VectorEngineTfidf::store_document_to_contained_terms(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter dtct(file_name.c_str(), document_to_contained_terms_.size() *
                                                document_to_contained_terms_[0].size() *
@@ -82,7 +84,7 @@ void VectorEngine::store_document_to_contained_terms(std::string &file_name) {
   }
 }
 
-void VectorEngine::store_term_id_to_term(std::string &file_name) {
+void VectorEngineTfidf::store_term_id_to_term(std::string &file_name) {
   // just take an approximate size as initial max size. It will be scaled up or down if needed.
   MmapedFileWriter titt(file_name.c_str(),
                         term_id_to_term.size() * term_id_to_term[0].size() * sizeof(char));
@@ -98,7 +100,7 @@ void VectorEngine::store_term_id_to_term(std::string &file_name) {
   }
 }
 
-void VectorEngine::store() {
+void VectorEngineTfidf::store() {
   std::string dir_name = "stored_hnsw";
   std::string dpt_fn = dir_name + "/documents_per_term";
   std::string dtv_fn = dir_name + "/document_to_vector";
@@ -112,7 +114,7 @@ void VectorEngine::store() {
   hnsw_alg->saveIndex(hnsw_fn);
 }
 
-bool VectorEngine::load() {
+bool VectorEngineTfidf::load() {
   std::string dir_name = "stored_hnsw";
   std::string dpt_fn = dir_name + "/documents_per_term";
   std::string dtv_fn = dir_name + "/document_to_vector";
@@ -136,13 +138,13 @@ bool VectorEngine::load() {
   }
 }
 
-void VectorEngine::load_documents_per_term(std::string &file_name) {
+void VectorEngineTfidf::load_documents_per_term(std::string &file_name) {
   MmapedFileReader dpt_reader(file_name);
   documents_per_term_.resize(dpt_reader.get_size() / sizeof(uint32_t));
   memcpy(documents_per_term_.data(), dpt_reader.begin(), dpt_reader.get_size() / sizeof(uint32_t));
 }
 
-void VectorEngine::load_document_to_vector(std::string &file_name) {
+void VectorEngineTfidf::load_document_to_vector(std::string &file_name) {
   MmapedFileReader dtv_reader(file_name);
   const char *cur = dtv_reader.begin();
 
@@ -163,7 +165,7 @@ void VectorEngine::load_document_to_vector(std::string &file_name) {
   }
 }
 
-void VectorEngine::load_document_to_contained_terms(std::string &file_name) {
+void VectorEngineTfidf::load_document_to_contained_terms(std::string &file_name) {
   MmapedFileReader dtct_reader(file_name);
   const char *cur = dtct_reader.begin();
 
@@ -184,7 +186,7 @@ void VectorEngine::load_document_to_contained_terms(std::string &file_name) {
   }
 }
 
-void VectorEngine::load_term_id_to_term(std::string &file_name) {
+void VectorEngineTfidf::load_term_id_to_term(std::string &file_name) {
   MmapedFileReader titt_reader(file_name);
   const char *cur = titt_reader.begin();
 
@@ -202,7 +204,7 @@ void VectorEngine::load_term_id_to_term(std::string &file_name) {
   }
 }
 
-void VectorEngine::normalize_vector(std::vector<float> &v) {
+void VectorEngineTfidf::normalize_vector(std::vector<float> &v) {
   float sum = 0;
   for (int i = 0; i < v.size(); ++i) {
     sum += v[i] * v[i];
@@ -213,7 +215,7 @@ void VectorEngine::normalize_vector(std::vector<float> &v) {
   }
 }
 
-void VectorEngine::indexDocuments(std::string &data_path) {
+void VectorEngineTfidf::indexDocuments(std::string &data_path) {
   DocumentIteratorOld doc_it(data_path);
   if (load()) {
     std::cout << "HNSW index loaded from save file.\n";
@@ -315,7 +317,7 @@ void VectorEngine::indexDocuments(std::string &data_path) {
   store();
 }
 
-void VectorEngine::insert(DocumentID min_id_inclusive, DocumentID max_id_exclusive) {
+void VectorEngineTfidf::insert(DocumentID min_id_inclusive, DocumentID max_id_exclusive) {
   for (DocumentID doc_id = min_id_inclusive; doc_id < max_id_exclusive; ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
     if (doc_id % 10000 == 0) {
@@ -324,7 +326,7 @@ void VectorEngine::insert(DocumentID min_id_inclusive, DocumentID max_id_exclusi
   }
 }
 
-std::vector<std::pair<DocumentID, double>> VectorEngine::search(
+std::vector<std::pair<DocumentID, double>> VectorEngineTfidf::search(
     const std::string &query, const scoring::ScoringFunction &score_func, uint32_t num_results) {
   DocumentID query_id = document_to_contained_terms_.size();
 
@@ -386,13 +388,13 @@ std::vector<std::pair<DocumentID, double>> VectorEngine::search(
   return res;
 }
 
-uint32_t VectorEngine::getDocumentCount() { return document_to_vector_.size(); }
+uint32_t VectorEngineTfidf::getDocumentCount() { return document_to_vector_.size(); }
 
-double VectorEngine::getAvgDocumentLength() {
+double VectorEngineTfidf::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
 }
 
-uint64_t VectorEngine::footprint() {
+uint64_t VectorEngineTfidf::footprint() {
   uint64_t fp = documents_per_term_.size() * sizeof(uint32_t);
   for (auto &v : document_to_vector_) {
     fp += (v.size() * sizeof(float));

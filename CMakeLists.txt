@@ -34,8 +34,7 @@ set(FTS_HEADERS
         src/algorithms/inverted/inverted_index_engine.hpp
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/vector/file_io.hpp
-        src/algorithms/vector/vector_engine.cpp
-        src/algorithms/vector/vector_engine.hpp
+        src/algorithms/vector/vector_engine_tfidf.hpp
         src/algorithms/vector/index/vector_lib.hpp
         src/algorithms/vector/index/hnsw/hnsw_alg.cpp
         src/algorithms/vector/index/hnsw/hnsw_alg.hpp
@@ -69,6 +68,7 @@ set(FTS_SOURCES
         src/scoring/tf_idf_gensim.cpp
         src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.cpp
+        src/algorithms/vector/vector_engine_tfidf.cpp
         src/algorithms/trigram/parser/trigram_parser.cpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/tokenizer/snowball/api.c
