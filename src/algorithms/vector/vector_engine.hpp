@@ -43,7 +43,6 @@ class VectorEngine : public FullTextSearchEngine {
  private:
   int dim = 1;                  // Dimension of the elements
   int max_elements = 10000000;  // Maximum number of elements, should be known beforehand.
-  // TODO: test different parameter combinations.
   int M =
       15;  // the number of bi-directional links created for every new element during construction.
   int ef_construction = 20;  // Controls index search speed/build speed tradeoff
@@ -97,11 +96,8 @@ class VectorEngine : public FullTextSearchEngine {
 
   std::unordered_map<std::string, TermID> term_to_term_id;
 
-  /// TODO: Only needed for debugging and testing
+  /// Only needed for debugging and testing
   std::vector<std::string> term_id_to_term;
-
-  /// TODO: Only needed for debugging and testing
-  // void test_store_and_load();
 
   hnsw::CosineSpaceSparse space;
 

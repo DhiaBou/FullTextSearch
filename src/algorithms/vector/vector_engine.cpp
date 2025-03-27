@@ -22,13 +22,9 @@ namespace hnsw = vectorlib::hnsw;
 
 VectorEngine::VectorEngine() : space(dim, document_to_vector_, document_to_contained_terms_) {
   hnsw_alg = new hnsw::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
-  // std::cout << "Vector Engine Initialized" << std::endl;
 }
 
-VectorEngine::~VectorEngine() {
-  // hnsw_alg->saveIndex("hnswIndex.bin");
-  delete hnsw_alg;
-}
+VectorEngine::~VectorEngine() { delete hnsw_alg; }
 
 void VectorEngine::print_vector(std::vector<float> values, std::vector<TermID> contained_terms) {
   for (int i = 0; i < contained_terms.size(); ++i) {
@@ -161,8 +157,6 @@ void VectorEngine::load_document_to_vector(std::string &file_name) {
     vec.resize(*reinterpret_cast<const uint32_t *>(cur));
     cur += sizeof(uint32_t);
 
-    // std::cout << *reinterpret_cast<const float *>(cur) << "\n";
-
     // read in the actual vector
     memcpy(vec.data(), cur, vec.size() * sizeof(float));
     cur += vec.size() * sizeof(float);
@@ -207,66 +201,6 @@ void VectorEngine::load_term_id_to_term(std::string &file_name) {
     term_to_term_id[term_id_to_term[i]] = i;
   }
 }
-
-// void VectorEngine::test_store_and_load() {
-//   store();
-//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-//   for (TermID tid = 0; tid < 100; ++tid) {
-//     std::cout << documents_per_term_[tid] << " ";
-//   }
-//   std::cout << std::endl;
-//   documents_per_term_.clear();
-//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-//   for (auto e : document_to_vector_[1]) {
-//     std::cout << e << " ";
-//   }
-//   std::cout << std::endl;
-//   document_to_vector_.clear();
-//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-//             << " values.\n";
-//   for (auto e : document_to_contained_terms_[1]) {
-//     std::cout << e << " ";
-//   }
-//   std::cout << std::endl;
-//   document_to_contained_terms_.clear();
-//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-//             << " values.\n";
-
-//   for (int i = 0; i < 10; ++i) {
-//     std::cout << term_id_to_term[i] << " ";
-//     std::cout << term_to_term_id[term_id_to_term[i]] << " ";
-//   }
-//   std::cout << std::endl;
-//   term_id_to_term.clear();
-//   term_to_term_id.clear();
-
-//   load_vectors();
-//   std::cout << "documents_per_term now contains " << documents_per_term_.size() << " values.\n";
-//   for (TermID tid = 0; tid < 100; ++tid) {
-//     std::cout << documents_per_term_[tid] << " ";
-//   }
-//   std::cout << std::endl;
-
-//   std::cout << "document_to_vector now contains " << document_to_vector_.size() << " values.\n";
-//   for (auto e : document_to_vector_[1]) {
-//     std::cout << e << " ";
-//   }
-//   std::cout << std::endl;
-//   std::cout << "document_to_contained_terms now contains " << document_to_contained_terms_.size()
-//             << " values.\n";
-//   for (auto e : document_to_contained_terms_[1]) {
-//     std::cout << e << " ";
-//   }
-//   std::cout << std::endl;
-
-//   for (int i = 0; i < 10; ++i) {
-//     std::cout << term_id_to_term[i] << " ";
-//     std::cout << term_to_term_id[term_id_to_term[i]] << " ";
-//   }
-//   std::cout << std::endl;
-// }
 
 void VectorEngine::normalize_vector(std::vector<float> &v) {
   float sum = 0;
@@ -316,8 +250,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
 
       // increase the total number of terms in this document
       terms_per_document_[did]++;
-
-      // std::cout << token << "\n";
     }
 
     if (did % 10000 == 0) {
@@ -337,14 +269,8 @@ void VectorEngine::indexDocuments(std::string &data_path) {
 
     document_to_contained_terms_.push_back(std::move(sorted_tokens));
 
-    // std::cout << documents_per_token_.size() << "\n";
-
     ++doc_it;
   }
-
-  // todo: store compressed vectors by concatenating them and then using compression tool
-
-  // TOdo: load indexed vectors from disc and decompress it and store it as vector of vectors
 
   // create the tf_idf vectors for each document
   uint32_t num_of_docs = terms_per_document_.size();
@@ -377,39 +303,14 @@ void VectorEngine::indexDocuments(std::string &data_path) {
       std::cout << did << "\n";
     }
   }
-  // print_vector(document_to_vector_[0], document_to_contained_terms_[0]);
-  // print_vector(document_to_vector_[1], document_to_contained_terms_[1]);
-  // print_vector(document_to_vector_[2], document_to_contained_terms_[2]);
-
-  // test_store_and_load();
 
   // insert vectors into hnsw
-
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
     if (doc_id % 10000 == 0) {
       std::cout << "inserted: " << doc_id << "\n";
     }
   }
-
-  // unsigned threadCount = std::thread::hardware_concurrency();
-  // std::vector<std::thread> threads;
-  // threads.reserve(threadCount);
-  // uint32_t num_docs_to_insert = document_to_contained_terms_.size() / threadCount;
-
-  // for (unsigned thread_id = 0; thread_id < threadCount - 1; ++thread_id) {
-  //   threads.emplace_back([this, thread_id, num_docs_to_insert]() {
-  //     this->insert(thread_id * num_docs_to_insert, (thread_id + 1) * num_docs_to_insert);
-  //   });
-  // }
-
-  // threads.emplace_back([this, threadCount, num_docs_to_insert]() {
-  //   this->insert((threadCount - 1) * num_docs_to_insert, document_to_contained_terms_.size());
-  // });
-
-  // for (auto &thread : threads) {
-  //   thread.join();
-  // }
 
   store();
 }
