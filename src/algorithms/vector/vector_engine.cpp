@@ -188,8 +188,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
 
   DocumentIterator doc_it(data_path);
   size_t NUM_THREADS = 8;
-
-  int counter = 0;
   
   std::vector<std::thread> workers;
   workers.reserve(NUM_THREADS);
@@ -220,7 +218,6 @@ void VectorEngine::indexDocuments(std::string &data_path) {
         }
 
         current_batch = doc_it.next();
-        counter += 128;
 
         // std::cout << std::format("Indexed around {} documents so far.\n", counter);
       }
