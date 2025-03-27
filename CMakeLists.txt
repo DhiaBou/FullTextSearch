@@ -35,6 +35,7 @@ set(FTS_HEADERS
         src/algorithms/trigram/trigram_index_engine.hpp
         src/algorithms/vector/file_io.hpp
         src/algorithms/vector/vector_engine_tfidf.hpp
+        src/algorithms/vector/vector_engine.hpp
         src/algorithms/vector/index/vector_lib.hpp
         src/algorithms/vector/index/hnsw/hnsw_alg.cpp
         src/algorithms/vector/index/hnsw/hnsw_alg.hpp
@@ -49,6 +50,7 @@ set(FTS_HEADERS
         src/algorithms/trigram/models/trigram.hpp
         src/algorithms/trigram/parser/trigram_parser.hpp
         src/algorithms/vsm/vector_space_model_engine.hpp
+        src/algorithms/vector/index/hnsw/spaces/cosine_sim.hpp
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/header.h
         src/tokenizer/snowball/stem_UTF_8_english.h
@@ -69,6 +71,7 @@ set(FTS_SOURCES
         src/algorithms/inverted/inverted_index_engine.cpp
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/vector/vector_engine_tfidf.cpp
+        src/algorithms/vector/vector_engine.cpp
         src/algorithms/trigram/parser/trigram_parser.cpp
         src/algorithms/vsm/vector_space_model_engine.cpp
         src/tokenizer/snowball/api.c
@@ -97,6 +100,8 @@ target_link_libraries(fts_lib
         arrow_shared
         parquet_shared
 )
+target_link_libraries(fts_lib PRIVATE arrow_shared parquet_shared CURL::libcurl jsoncpp_lib)
+target_include_directories(fts_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 add_executable(fts src/main.cpp)
 

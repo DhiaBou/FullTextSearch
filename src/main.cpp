@@ -2,7 +2,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
@@ -12,8 +11,10 @@
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
+#include "algorithms/vector/vector_engine.hpp"
 #include "algorithms/vsm/vector_space_model_engine.hpp"
 #include "bootstrap/cli.hpp"
+#include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "queries/query_iterator.hpp"
 #include "scoring/bm25.hpp"

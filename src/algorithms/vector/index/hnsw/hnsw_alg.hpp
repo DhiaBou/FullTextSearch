@@ -54,8 +54,6 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
 
   void setEf(size_t ef);
 
-  void loadIndex(const std::string& location, SpaceInterface<dist_t>* s, size_t max_elements_i = 0);
-
   ~HierarchicalNSW();
 
   struct CompareByFirst {
@@ -64,6 +62,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
       return a.first < b.first;
     }
   };
+
+  void loadIndex(const std::string& location, SpaceInterface<dist_t>* s, size_t max_elements_i = 0);
 
  private:
   int getRandomLevel(double reverse_size);
