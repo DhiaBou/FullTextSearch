@@ -20,7 +20,9 @@ class InvertedIndexEngine : public FullTextSearchEngine {
   std::vector<std::pair<DocumentID, double>> search(const std::string &query,
                                                     const scoring::ScoringFunction &score_func,
                                                     uint32_t num_results) override;
-  uint64_t footprint() override;
+  uint64_t footprint_size() override;
+
+  uint64_t footprint_capacity() override;
 
   uint32_t getDocumentCount() override;
 
