@@ -33,6 +33,8 @@ class VectorEngine : public FullTextSearchEngine {
 
   double getAvgDocumentLength() override;
 
+  uint64_t footprint() override;
+
  private:
  	int dim = 384; 									// Dimension of the elements
 	int max_elements = 10000000;				// Maximum number of elements, should be known beforehand.

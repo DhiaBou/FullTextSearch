@@ -7,12 +7,9 @@
 #include "algorithms/trigram/trigram_index_engine.hpp"
 #include "algorithms/vector/vector_engine_tfidf.hpp"
 #include "documents/document_iterator.hpp"
-//---------------------------------------------------------------------------
-
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
 #include "algorithms/vector/vector_engine.hpp"
-#include "algorithms/vsm/vector_space_model_engine.hpp"
 #include "bootstrap/cli.hpp"
 #include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
@@ -30,7 +27,9 @@ int main(int argc, char** argv) {
   // Decide for a FTS-Index-Engine
   auto algorithm_choice = std::move(options.algorithm);
   std::unique_ptr<FullTextSearchEngine> engine;
-  if (algorithm_choice == "vector") {
+  if (algorithm_choice == "vector-emb") {
+    engine = std::make_unique<VectorEngine>();
+  } else if (algorithm_choice == "vector-tfidf") {
     engine = std::make_unique<VectorEngineTfidf>();
   } else if (algorithm_choice == "inverted") {
     engine = std::make_unique<InvertedIndexEngine>();
