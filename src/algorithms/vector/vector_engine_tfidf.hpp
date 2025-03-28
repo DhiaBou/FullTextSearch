@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../documents/document_iterator_old.hpp"
+#include "../../documents/document_iterator.hpp"
 #include "../../fts_engine.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
 #include "index/hnsw/spaces/cosine_space_sparse.hpp"

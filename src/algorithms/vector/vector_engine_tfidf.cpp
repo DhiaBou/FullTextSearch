@@ -216,7 +216,7 @@ void VectorEngineTfidf::normalize_vector(std::vector<float> &v) {
 }
 
 void VectorEngineTfidf::indexDocuments(std::string &data_path) {
-  DocumentIteratorOld doc_it(data_path);
+  DocumentIterator doc_it(data_path);
   if (load()) {
     std::cout << "HNSW index loaded from save file.\n";
     return;
@@ -228,50 +228,50 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
   // key is document id, value is number of terms that this document contains
   // needed only to build the vectors
   std::unordered_map<DocumentID, uint32_t> terms_per_document_;
+  std::vector<Document> docs = doc_it.next();
+  while (!docs.empty()) {
+    for (const auto &doc : docs) {
+      DocumentID did = doc.getId() - 1;
+      tokenizer::StemmingTokenizer tokenizer(doc.getData(), doc.getSize());
+      std::unordered_set<TermID> unique_terms_in_doc;
 
-  while (doc_it.hasNext()) {
-    auto doc = *doc_it;
-    DocumentID did = doc->getId() - 1;
-    tokenizer::StemmingTokenizer tokenizer(doc->getData(), doc->getSize());
-    std::unordered_set<TermID> unique_terms_in_doc;
+      for (auto token = tokenizer.nextToken(false); !token.empty();
+           token = tokenizer.nextToken(false)) {
+        // if this is the first time this term was discoverd over all documents, give it a new
+        // TermID
+        if (term_to_term_id.find(token) == term_to_term_id.end()) {
+          term_id_to_term.push_back(token);
+          documents_per_term_.push_back(0);  // because it is increased later
+          term_to_term_id[token] = term_id_to_term.size() - 1;
+        }
+        TermID tid = term_to_term_id[token];
+        unique_terms_in_doc.insert(tid);
 
-    for (auto token = tokenizer.nextToken(false); !token.empty();
-         token = tokenizer.nextToken(false)) {
-      // if this is the first time this term was discoverd over all documents, give it a new
-      // TermID
-      if (term_to_term_id.find(token) == term_to_term_id.end()) {
-        term_id_to_term.push_back(token);
-        documents_per_term_.push_back(0);  // because it is increased later
-        term_to_term_id[token] = term_id_to_term.size() - 1;
+        // increment the number of times a token appeared in that document
+        term_frequency_per_document_[tid][did]++;
+
+        // increase the total number of terms in this document
+        terms_per_document_[did]++;
       }
-      TermID tid = term_to_term_id[token];
-      unique_terms_in_doc.insert(tid);
 
-      // increment the number of times a token appeared in that document
-      term_frequency_per_document_[tid][did]++;
+      if (did % 10000 == 0) {
+        std::cout << did << "\n";
+      }
 
-      // increase the total number of terms in this document
-      terms_per_document_[did]++;
+      // for every term that occurs in this document, increase the count of documents that this term
+      // occurs in
+      for (auto &t : unique_terms_in_doc) {
+        ++documents_per_term_[t];
+      }
+
+      // store the terms that this document contains as part of the sparse representation of the
+      // tfidf vectors
+      std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
+      std::sort(sorted_tokens.begin(), sorted_tokens.end());
+
+      document_to_contained_terms_.push_back(std::move(sorted_tokens));
     }
-
-    if (did % 10000 == 0) {
-      std::cout << did << "\n";
-    }
-
-    // for every term that occurs in this document, increase the count of documents that this term
-    // occurs in
-    for (auto &t : unique_terms_in_doc) {
-      ++documents_per_term_[t];
-    }
-
-    // store the terms that this document contains as part of the sparse representation of the
-    // tfidf vectors
-    std::vector<uint32_t> sorted_tokens(unique_terms_in_doc.begin(), unique_terms_in_doc.end());
-    std::sort(sorted_tokens.begin(), sorted_tokens.end());
-
-    document_to_contained_terms_.push_back(std::move(sorted_tokens));
-
-    ++doc_it;
+    docs = doc_it.next();
   }
 
   // create the tf_idf vectors for each document
@@ -395,16 +395,19 @@ double VectorEngineTfidf::getAvgDocumentLength() {
 }
 
 uint64_t VectorEngineTfidf::footprint() {
-  uint64_t fp = documents_per_term_.size() * sizeof(uint32_t);
+  uint64_t vec_fp = documents_per_term_.size() * sizeof(uint32_t);
   for (auto &v : document_to_vector_) {
-    fp += (v.size() * sizeof(float));
+    vec_fp += (v.size() * sizeof(float));
   }
   for (auto &v : document_to_contained_terms_) {
-    fp += (v.size() * sizeof(TermID));
+    vec_fp += (v.size() * sizeof(TermID));
   }
   for (auto &[s, t] : term_to_term_id) {
-    fp += 2 * s.size() + sizeof(uint32_t);  // count size of the string twice, because it is
-                                            // contained in term_id_to_term as well
+    vec_fp += 2 * s.size() + sizeof(uint32_t);  // count size of the string twice, because it is
+                                                // contained in term_id_to_term as well
   }
-  return fp;
+  // uint64_t hnsw_fp = hnsw_alg->get_footprint();
+  // std::cout << "hnsw_fp: " << hnsw_fp << "\n";
+  // std::cout << "vec_fp: " << vec_fp << "\n";
+  return vec_fp;
 }

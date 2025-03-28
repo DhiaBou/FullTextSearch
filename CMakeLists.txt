@@ -26,7 +26,6 @@ set(FTS_HEADERS
         src/utils.hpp
         src/documents/document.hpp
         src/documents/document_iterator.hpp
-        src/documents/document_iterator_old.hpp
         src/scoring/scoring_function.hpp
         src/scoring/bm25.hpp
         src/scoring/tf_idf.hpp
@@ -64,7 +63,6 @@ set(FTS_HEADERS
 
 set(FTS_SOURCES
         src/documents/document_iterator.cpp
-        src/documents/document_iterator_old.cpp
         src/scoring/bm25.cpp
         src/scoring/tf_idf.cpp
         src/scoring/tf_idf_gensim.cpp
