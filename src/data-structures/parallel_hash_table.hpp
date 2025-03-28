@@ -159,7 +159,7 @@ class ParallelHashTable {
   /// The size of the hash table.
   uint32_t size() { return table.size(); }
   /// The memory footprint of the hash table.
-  uint64_t footprint() {
+  uint64_t footprint_capacity() {
     // Note: This function only includes information on the memory footprint
     // that is known at compile time. Any other dynamically allocated memory
     // by key or value must be determined by the instantiating client.
@@ -170,9 +170,25 @@ class ParallelHashTable {
     // Table
     size += table.size() * sizeof(Bucket);
     for (size_t i = 0; i < table.size(); ++i) {
-      for (const auto& [key, value] : table[i].first) {
-        size += sizeof(key);
-        size += sizeof(value);
+      size += table[i].first.capacity() * (sizeof(Key) + sizeof(Value));
+    }
+
+    return size;
+  }
+
+  uint64_t footprint_size() {
+    // Note: This function only includes information on the memory footprint
+    // that is known at compile time. Any other dynamically allocated memory
+    // by key or value must be determined by the instantiating client.
+    uint64_t size = 0;
+
+    // Metadata
+    size += sizeof(table_mask);
+    // Table
+    for (size_t i = 0; i < table.size(); ++i) {
+      if (table[i].first.size() != 0) {
+        size += sizeof(Bucket);
+        size += table[i].first.size() * (sizeof(Key) + sizeof(Value));
       }
     }
 

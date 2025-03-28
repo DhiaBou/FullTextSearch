@@ -14,7 +14,12 @@ std::vector<std::pair<DocumentID, double>> VectorSpaceModelEngine::search(
   throw std::runtime_error("search method is not yet implemented.");
 }
 
-uint64_t VectorSpaceModelEngine::footprint() {
+uint64_t VectorSpaceModelEngine::footprint_capacity() {
+  // TODO
+  return 0;
+}
+
+uint64_t VectorSpaceModelEngine::footprint_size() {
   // TODO
   return 0;
 }

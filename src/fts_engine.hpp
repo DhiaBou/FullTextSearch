@@ -47,11 +47,17 @@ class FullTextSearchEngine {
       const std::string &query, const scoring::ScoringFunction &score_func,
       uint32_t num_results) = 0;
   /**
-   * @brief Determines the engine's memory footprint.
+   * @brief Determines the engine's memory footprint. (Only real needed memory)
+   *
+   * @return The memory footprint in bytes without overallocation.
+   */
+  virtual uint64_t footprint_size() = 0;
+  /**
+   * @brief Determines the engine's memory footprint. (All allocated memory)
    *
    * @return The memory footprint in bytes.
    */
-  virtual uint64_t footprint() = 0;
+  virtual uint64_t footprint_capacity() = 0;
   /**
    * @brief Gets the number of indexed documents.
    *

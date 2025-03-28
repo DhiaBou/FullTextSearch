@@ -161,14 +161,27 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
   return top_documents;
 }
 
-uint64_t InvertedIndexEngine::footprint() {
+uint64_t InvertedIndexEngine::footprint_capacity() {
   using tokens_per_document_type = decltype(tokens_per_document_)::value_type;
   size_t tokens_per_document_footprint =
       tokens_per_document_.capacity() * sizeof(tokens_per_document_type);
 
-  size_t token_frequency_map_footprint = term_frequency_per_document_.footprint();
+  size_t token_frequency_map_footprint = term_frequency_per_document_.footprint_capacity();
   for (auto &[key, value] : term_frequency_per_document_) {
     token_frequency_map_footprint += (value.capacity() * sizeof(std::pair<uint32_t, uint32_t>));
+  }
+  return token_frequency_map_footprint + tokens_per_document_footprint +
+         sizeof(InvertedIndexEngine);
+}
+
+uint64_t InvertedIndexEngine::footprint_size() {
+  using tokens_per_document_type = decltype(tokens_per_document_)::value_type;
+  size_t tokens_per_document_footprint =
+      tokens_per_document_.size() * sizeof(tokens_per_document_type);
+
+  size_t token_frequency_map_footprint = term_frequency_per_document_.footprint_size();
+  for (auto &[key, value] : term_frequency_per_document_) {
+    token_frequency_map_footprint += (value.size() * sizeof(std::pair<uint32_t, uint32_t>));
   }
   return token_frequency_map_footprint + tokens_per_document_footprint +
          sizeof(InvertedIndexEngine);
