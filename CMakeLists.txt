@@ -48,7 +48,6 @@ set(FTS_HEADERS
         src/algorithms/trigram/models/doc_freq.hpp
         src/algorithms/trigram/models/trigram.hpp
         src/algorithms/trigram/parser/trigram_parser.hpp
-        src/algorithms/vsm/vector_space_model_engine.hpp
         src/algorithms/vector/index/hnsw/spaces/cosine_sim.hpp
         src/tokenizer/snowball/api.h
         src/tokenizer/snowball/header.h
@@ -71,7 +70,6 @@ set(FTS_SOURCES
         src/algorithms/vector/vector_engine_tfidf.cpp
         src/algorithms/vector/vector_engine.cpp
         src/algorithms/trigram/parser/trigram_parser.cpp
-        src/algorithms/vsm/vector_space_model_engine.cpp
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c
         src/tokenizer/snowball/stem_UTF_8_english.c
