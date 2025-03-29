@@ -20,8 +20,10 @@ class Index {
   virtual void store(std::ofstream& file) = 0;
   /// Load the underlying data structure from given data.
   virtual void load(const char* begin, const char* end) = 0;
-  /// Determine the memory footprint of the index in Bytes.
+  /// Determines the allocated memory footprint of the index in Bytes.
   virtual uint64_t footprint_capacity() = 0;
+  /// Determines the used memory footprint of the index in Bytes.
+  virtual uint64_t footprint_size() = 0;
 };
 //---------------------------------------------------------------------------
 template <typename ContainerT, uint8_t Size>
