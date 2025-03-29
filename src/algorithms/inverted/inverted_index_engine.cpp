@@ -43,8 +43,8 @@ void InvertedIndexEngine::indexBatch(const std::vector<Document> &batch) {
 
     tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
 
-    for (auto token = tokenizer.nextToken(false); !token.empty();
-         token = tokenizer.nextToken(false)) {
+    for (auto token = tokenizer.nextToken(true); !token.empty();
+         token = tokenizer.nextToken(true)) {
       local_term_frequency_per_document[token]++;
       num_tokens++;
     }
@@ -77,8 +77,8 @@ void InvertedIndexEngine::estimateDataStructureSizes(const std::string &data_pat
 
         tokenizer::StemmingTokenizer tokenizer(begin, doc.getSize());
 
-        for (auto token = tokenizer.nextToken(false); !token.empty();
-             token = tokenizer.nextToken(false)) {
+        for (auto token = tokenizer.nextToken(true); !token.empty();
+             token = tokenizer.nextToken(true)) {
           hyper_log_log.add(token, thread_id);
         }
       }
@@ -116,8 +116,8 @@ std::vector<std::pair<DocumentID, double>> InvertedIndexEngine::search(
   std::unordered_map<DocumentID, double> doc_to_score;
 
   // Compute scores for each token in the query
-  for (auto token = tokenizer.nextToken(false); !token.empty();
-       token = tokenizer.nextToken(false)) {
+  for (auto token = tokenizer.nextToken(true); !token.empty();
+       token = tokenizer.nextToken(true)) {
     auto it = term_frequency_per_document_.find(token);
     if (it == term_frequency_per_document_.end()) {
       // This token doesn't appear in any document

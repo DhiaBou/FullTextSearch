@@ -4,10 +4,11 @@
 
 #ifndef TOKENIZER_RULES_HPP
 #define TOKENIZER_RULES_HPP
+#include <array>
 #include <string>
 #include <unordered_set>
 namespace tokenizer {
-static const char DELIM_CHARS[] = " \t\n\r.,;:!()[]{}<>?/\"'~@#$%^&*-_=+|\\";
+static const char DELIM_CHARS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+$&@%0123456789";
 static const std::unordered_set<std::string> STOP_WORDS = {
     "i",       "me",      "my",      "myself",   "we",         "our",    "ours",    "ourselves",
     "you",     "your",    "yours",   "yourself", "yourselves", "he",     "him",     "his",
@@ -24,15 +25,30 @@ static const std::unordered_set<std::string> STOP_WORDS = {
     "where",   "why",     "how",     "all",      "any",        "both",   "each",    "few",
     "more",    "most",    "other",   "some",     "such",       "no",     "nor",     "not",
     "only",    "own",     "same",    "so",       "than",       "too",    "very",    "s",
-    "t",       "can",     "will",    "just",     "don",        "should", "now"};
-static bool DELIMS[256] = {false};
-
-static const auto init_delims = [] {
-  for (const char* p = DELIM_CHARS; *p != '\0'; ++p) {
-    DELIMS[static_cast<unsigned char>(*p)] = true;
+    "t",       "can",     "will",    "just",     "don",        "should", "now",     "n",
+    "like",    "good",    "go",      "going",    "get",        "one",    "got",     "could"};
+constexpr std::array<bool, 256> make_delims() {
+  std::array<bool, 256> delims{};
+  delims.fill(true);
+  for (char c = '0'; c <= '9'; ++c) {
+    delims[static_cast<unsigned char>(c)] = false;
   }
-  return 0;
-}();
+  for (char c = 'A'; c <= 'Z'; ++c) {
+    delims[static_cast<unsigned char>(c)] = false;
+  }
+  for (char c = 'a'; c <= 'z'; ++c) {
+    delims[static_cast<unsigned char>(c)] = false;
+  }
+  delims[static_cast<unsigned char>('$')] = false;
+  delims[static_cast<unsigned char>('%')] = false;
+  delims[static_cast<unsigned char>('&')] = false;
+  delims[static_cast<unsigned char>('+')] = false;
+  delims[static_cast<unsigned char>('@')] = false;
+
+  return delims;
+}
+
+static std::array<bool, 256> DELIMS = make_delims();
 
 static constexpr bool isDelimiter(const char c) { return DELIMS[static_cast<unsigned char>(c)]; }
 
