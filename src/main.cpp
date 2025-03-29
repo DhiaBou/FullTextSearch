@@ -34,8 +34,11 @@ int main(int argc, char** argv) {
   // Build the FTS-Index
   std::cout << "Build: ";
   {
-    utils::Timer<std::chrono::milliseconds> timer;
+    auto start = std::chrono::high_resolution_clock::now();
     engine->indexDocuments(options.data_path);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << std::endl;
   }
 
   // Determine the memory footprint
@@ -68,24 +71,41 @@ int main(int argc, char** argv) {
     query_engine = std::make_unique<queries::CommandLineIterator>();
   }
 
-  while (query_engine->hasNext()) {
-    queries::Query query = query_engine->next();
+  // Read queries
+  if (query_engine->getType() == queries::QueryIterator::Type::File) {
+    fs::path output_path = fs::path(options.queries_path) / (options.output_prefix + "_result.tbl");
+    std::ofstream file_output(output_path);
+    while (query_engine->hasNext()) {
+      queries::Query query = query_engine->next();
 
-    // Run query
-    std::vector<std::pair<DocumentID, double>> results;
-    std::cout << query.content << ": ";
-    {
-      utils::Timer<std::chrono::microseconds> timer;
-      results = engine->search(query.content, *score_func, options.num_results);
-    }
-
-    if (query_engine->getType() == queries::QueryIterator::Type::File) {
-      fs::path output_path = fs::path(options.queries_path) / (query.id + "_result.tbl");
-      std::ofstream file_output(output_path);
-      for (const auto& [doc_id, score] : results) {
-        file_output << doc_id << "|" << score << "|" << std::endl;
+      // Run query
+      std::vector<std::pair<DocumentID, double>> results;
+      std::cout << query.content << ": ";
+      {
+        auto start = std::chrono::high_resolution_clock::now();
+        results = engine->search(query.content, *score_func, options.num_results);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
+                  << std::endl;
       }
-    } else {
+      for (const auto& [doc_id, score] : results) {
+        file_output << query.content << "|" << doc_id << "|" << score << "|" << std::endl;
+      }
+    }
+  } else {
+    while (query_engine->hasNext()) {
+      queries::Query query = query_engine->next();
+
+      // Run query
+      std::vector<std::pair<DocumentID, double>> results;
+      std::cout << query.content << ": ";
+      {
+        auto start = std::chrono::high_resolution_clock::now();
+        results = engine->search(query.content, *score_func, options.num_results);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
+                  << std::endl;
+      }
       for (const auto& [doc_id, score] : results) {
         std::cout << doc_id << "|" << score << "|" << std::endl;
       }

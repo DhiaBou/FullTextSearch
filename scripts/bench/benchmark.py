@@ -20,8 +20,11 @@ executable_path = args.executable
 output_dir = args.output
 query_dir = args.query
 num_results = args.num_results
-data_sets = ['amazon_review']
-algos = ['trigram']
+data_sets = ['imdb', 'yelp', 'cnn_dailymail']
+algos = ['inverted', 'trigram']
+
+# Number of iterations
+iterations = 1
 
 # Ensure directory exists
 os.makedirs(output_dir, exist_ok=True)
@@ -41,27 +44,28 @@ with open(build_file, 'w', newline='') as build,\
     footprint_writer = csv.writer(footprint)
     query_writer = csv.writer(query)
     
-    for data in data_sets:
+    for i in range(iterations):
         for algo in algos:
-            print(f"{algo} on {data}")
-            result = subprocess.run([
-                executable_path,
-                '-d', os.path.join(data_src, data),
-                '-a', algo,
-                '-s', 'bm25',
-                '-n', num_results,
-                '-q', query_dir
-            ], capture_output=True, text=True)
+            for data in data_sets:
+                print(f"{algo} on {data}")
+                result = subprocess.run([
+                    executable_path,
+                    '-d', os.path.join(data_src, data),
+                    '-a', algo,
+                    '-s', 'bm25',
+                    '-n', num_results,
+                    '-q', os.path.join(query_dir, data, "fuzzy_unique_words_levenstein_2"),
+                    '-o', algo
+                ], capture_output=True, text=True)
 
-            for line in result.stdout.splitlines():
-                if line.startswith("Build:"):
-                    build_time = line.split(":")[1].strip()
-                    build_writer.writerow([data, algo, build_time])
-                elif line.startswith("Memory footprint:"):
-                    memory_footprint = line.split(":")[1].strip()
-                    footprint_writer.writerow([data, algo, memory_footprint])
-                else:
-                    print(line)
-                    query_id = line.split(":")[0].strip()  # Remove quotes from the query
-                    time = line.split(":")[1].strip()  # Extract the time
-                    query_writer.writerow([data, algo, query_id, time])
+                for line in result.stdout.splitlines():
+                    if line.startswith("Build:"):
+                        build_time = line.split(":")[1].strip()
+                        build_writer.writerow([data, algo, build_time])
+                    elif line.startswith("Memory footprint:"):
+                        memory_footprint = line.split(":")[1].strip()
+                        footprint_writer.writerow([data, algo, memory_footprint])
+                    else:
+                        query_id = line.split(":")[0].strip()  # Remove quotes from the query
+                        time = line.split(":")[1].strip()  # Extract the time
+                        query_writer.writerow([data, algo, query_id, time])

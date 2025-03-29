@@ -142,5 +142,6 @@ stamp-h1
 
 # Any data
 data/
+queries/
 *.parquet
 *.csv
