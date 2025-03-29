@@ -20,6 +20,7 @@ FTSOptions parseCommandLine(int argc, char** argv) {
       "Optional: Specifies the path to a directory containing .txt files. Each file represents a single query. "\
       "Also, it represents the output directory of the query results.", cxxopts::value<std::string>()
     )
+    ("o,output_prefix", "The prefix of the query output files.", cxxopts::value<std::string>())
     ("h,help", "Print usage");
   // clang-format on
 
@@ -38,6 +39,7 @@ FTSOptions parseCommandLine(int argc, char** argv) {
   opts.benchmarking_mode = result["benchmarking-mode"].as<bool>();
   if (result.count("queries")) {
     opts.queries_path = result["queries"].as<std::string>();
+    opts.output_prefix = result["output_prefix"].as<std::string>();
   }
 
   return opts;
