@@ -42,8 +42,10 @@ int main(int argc, char** argv) {
   }
 
   // Determine the memory footprint
-  const auto& footprint = engine->footprint();
-  std::cout << "Memory footprint: " << footprint << std::endl;
+  const auto& allocated_footprint = engine->footprint_capacity();
+  std::cout << "Allocated memory footprint: " << allocated_footprint << std::endl;
+  const auto& real_footprint = engine->footprint_size();
+  std::cout << "Real memory footprint: " << real_footprint << std::endl;
 
   if (options.benchmarking_mode) {
     return 0;
