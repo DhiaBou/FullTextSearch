@@ -3,6 +3,7 @@ import subprocess
 import csv
 import argparse
 from datetime import datetime
+import subprocess
 
 # -------------- Setup --------------
 
@@ -24,7 +25,7 @@ data_sets = ['imdb', 'yelp', 'cnn_dailymail']
 algos = ['inverted', 'trigram']
 
 # Number of iterations
-iterations = 1
+iterations = 5
 
 # Ensure directory exists
 os.makedirs(output_dir, exist_ok=True)
@@ -46,6 +47,8 @@ with open(build_file, 'w', newline='') as build,\
     
     for i in range(iterations):
         for algo in algos:
+            subprocess.run(["sudo", "purge"])
+             
             for data in data_sets:
                 print(f"{algo} on {data}")
                 result = subprocess.run([
@@ -54,7 +57,7 @@ with open(build_file, 'w', newline='') as build,\
                     '-a', algo,
                     '-s', 'bm25',
                     '-n', num_results,
-                    '-q', os.path.join(query_dir, data, "fuzzy_unique_words_levenstein_2"),
+                    '-q', os.path.join(query_dir, data, "performance_queries"),
                     '-o', algo
                 ], capture_output=True, text=True)
 
@@ -62,9 +65,12 @@ with open(build_file, 'w', newline='') as build,\
                     if line.startswith("Build:"):
                         build_time = line.split(":")[1].strip()
                         build_writer.writerow([data, algo, build_time])
-                    elif line.startswith("Memory footprint:"):
+                    elif line.startswith("Real memory footprint:"):
                         memory_footprint = line.split(":")[1].strip()
-                        footprint_writer.writerow([data, algo, memory_footprint])
+                        footprint_writer.writerow([data, algo, "size", memory_footprint])
+                    elif line.startswith("Allocated memory footprint:"):
+                        memory_footprint = line.split(":")[1].strip()
+                        footprint_writer.writerow([data, algo, "capacity", memory_footprint])
                     else:
                         query_id = line.split(":")[0].strip()  # Remove quotes from the query
                         time = line.split(":")[1].strip()  # Extract the time
