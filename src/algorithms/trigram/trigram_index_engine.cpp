@@ -160,7 +160,7 @@ uint64_t TrigramIndexEngine::footprint_capacity() {
   // Metadata
   size += sizeof(doc_count);
   size += sizeof(avg_doc_length);
-  size += sizeof(doc_to_length) + doc_to_length.size() * sizeof(uint32_t);
+  size += sizeof(doc_to_length) + doc_to_length.capacity() * sizeof(uint32_t);
 
   // Index
   size += index.footprint_capacity();
@@ -169,8 +169,17 @@ uint64_t TrigramIndexEngine::footprint_capacity() {
 }
 //---------------------------------------------------------------------------
 uint64_t TrigramIndexEngine::footprint_size() {
-  //TODO
-  return -1;
+  uint64_t size = 0;
+
+  // Metadata
+  size += sizeof(doc_count);
+  size += sizeof(avg_doc_length);
+  size += sizeof(doc_to_length) + doc_to_length.size() * sizeof(uint32_t);
+
+  // Index
+  size += index.footprint_size();
+
+  return size;
 }
 //---------------------------------------------------------------------------
 void TrigramIndexEngine::merge(std::vector<std::unordered_map<DocumentID, uint32_t>>& maps) {

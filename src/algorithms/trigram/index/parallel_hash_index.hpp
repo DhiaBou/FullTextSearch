@@ -54,6 +54,19 @@ class ParallelHashIndex : public Index<DocFreq, std::vector<DocFreq>, MaxOffset>
     size += table.footprint_capacity();
     // Size known at runtime
     for (auto& [key, value] : table) {
+      size += (value.capacity() * sizeof(DocFreq));
+    }
+
+    return size;
+  }
+  //---------------------------------------------------------------------------
+  uint64_t footprint_size() override {
+    uint64_t size = 0;
+
+    // Size known at compile time
+    size += table.footprint_size();
+    // Size known at runtime
+    for (auto& [key, value] : table) {
       size += (value.size() * sizeof(DocFreq));
     }
 
@@ -64,6 +77,7 @@ class ParallelHashIndex : public Index<DocFreq, std::vector<DocFreq>, MaxOffset>
     for (auto& [key, value] : table) {
       if (value.size() > max_occurences) {
         value.clear();
+        value.shrink_to_fit();
       }
     }
   }
