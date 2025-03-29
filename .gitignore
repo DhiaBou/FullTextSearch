@@ -144,3 +144,6 @@ stamp-h1
 data/
 *.parquet
 *.csv
+
+# HNSW Index Binary Files
+*.bin
