@@ -5,11 +5,8 @@
 
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
-#include "algorithms/vector/vector_engine_tfidf.hpp"
-#include "documents/document_iterator.hpp"
-#include "algorithms/inverted/inverted_index_engine.hpp"
-#include "algorithms/trigram/trigram_index_engine.hpp"
 #include "algorithms/vector/vector_engine.hpp"
+#include "algorithms/vector/vector_engine_tfidf.hpp"
 #include "bootstrap/cli.hpp"
 #include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
@@ -53,7 +50,7 @@ int main(int argc, char** argv) {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
   } else if (scoring_choice == "tf-idf") {
-    if (algorithm_choice == "vector") {
+    if (algorithm_choice == "vector-tfidf") {
       score_func = std::make_unique<scoring::TfIdfGensim>(engine->getDocumentCount());
     } else {
       score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());

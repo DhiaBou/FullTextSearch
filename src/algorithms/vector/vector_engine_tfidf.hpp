@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../documents/document_iterator.hpp"
-#include "../../fts_engine.hpp"
+#include "documents/document_iterator.hpp"
+#include "fts_engine.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
 #include "index/hnsw/spaces/cosine_space_sparse.hpp"
 #include "index/hnsw/spaces/l2_space.hpp"

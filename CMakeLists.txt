@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.3)
+cmake_minimum_required(VERSION 3.29)
 project(fts)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -36,7 +36,6 @@ set(FTS_HEADERS
         src/algorithms/vector/vector_engine_tfidf.hpp
         src/algorithms/vector/vector_engine.hpp
         src/algorithms/vector/index/vector_lib.hpp
-        src/algorithms/vector/index/hnsw/hnsw_alg.cpp
         src/algorithms/vector/index/hnsw/hnsw_alg.hpp
         src/algorithms/vector/index/hnsw/visited_list.hpp
         src/algorithms/vector/index/hnsw/spaces/l2_space.hpp
@@ -69,6 +68,7 @@ set(FTS_SOURCES
         src/algorithms/trigram/trigram_index_engine.cpp
         src/algorithms/vector/vector_engine_tfidf.cpp
         src/algorithms/vector/vector_engine.cpp
+        src/algorithms/vector/index/hnsw/hnsw_alg.cpp
         src/algorithms/trigram/parser/trigram_parser.cpp
         src/tokenizer/snowball/api.c
         src/tokenizer/snowball/utilities.c

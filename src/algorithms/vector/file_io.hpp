@@ -18,7 +18,7 @@ class MmapedFileWriter {
 
     // set file size of the mapped file to intermediate_size
     if (ftruncate(file_descriptor, initial_max_size)) {
-      std::cout << "setting the intermediate file size did not work.\n";
+      std::cout << "Error: setting the intermediate file size did not work.\n";
       close(file_descriptor);
       exit(1);
     }
@@ -37,7 +37,7 @@ class MmapedFileWriter {
 
     // resize the file back to the size that it really takes
     if (ftruncate(file_descriptor, consumed_size)) {
-      std::cout << "resizing the file back to the correct size did not work.\n";
+      std::cout << "Error: Resizing the file back to the correct size did not work.\n";
       close(file_descriptor);
       exit(1);
     }
@@ -68,14 +68,13 @@ class MmapedFileWriter {
     msync(data, current_max_size, MS_SYNC);
     munmap(data, consumed_size);
     if (ftruncate(file_descriptor, new_max_size)) {
-      std::cout << "resizing the file to " << new_max_size << " did not work.\n";
+      std::cout << "Error: Resizing the file to " << new_max_size << " did not work.\n";
       close(file_descriptor);
       exit(1);
     }
     current_max_size = new_max_size;
     data = static_cast<char *>(
         mmap(nullptr, current_max_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_descriptor, 0));
-    std::cout << "successfully resized to " << current_max_size << ".\n";
   }
 };
 

@@ -4,19 +4,17 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
-#include <iostream>
 #include <ostream>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <unordered_set>
 #include <vector>
 
-#include "../../scoring/tf_idf_gensim.hpp"
-#include "../../tokenizer/stemmingtokenizer.hpp"
-#include "./file_io.hpp"
+#include "algorithms/vector/file_io.hpp"
 #include "algorithms/vector/index/hnsw/spaces/cosine_space_sparse.hpp"
 #include "fts_engine.hpp"
+#include "scoring/tf_idf_gensim.hpp"
+#include "tokenizer/stemmingtokenizer.hpp"
 
 namespace hnsw = vectorlib::hnsw;
 
@@ -28,12 +26,7 @@ VectorEngineTfidf::VectorEngineTfidf()
 VectorEngineTfidf::~VectorEngineTfidf() { delete hnsw_alg; }
 
 void VectorEngineTfidf::print_vector(std::vector<float> values,
-                                     std::vector<TermID> contained_terms) {
-  for (int i = 0; i < contained_terms.size(); ++i) {
-    std::cout << term_id_to_term[contained_terms[i]] << ": " << values[i] << "; ";
-  }
-  std::cout << "\n";
-}
+                                     std::vector<TermID> contained_terms) {}
 
 void VectorEngineTfidf::store_documents_per_term(std::string &file_name) {
   MmapedFileWriter dpt(file_name.c_str(), documents_per_term_.size() * sizeof(uint32_t));
@@ -54,8 +47,6 @@ void VectorEngineTfidf::store_document_to_vector(std::string &file_name) {
     // write size of vector
     uint32_t vector_size = static_cast<uint32_t>(document_to_vector_[did].size());
     dtv.write(&vector_size, sizeof(uint32_t));
-
-    // std::cout << document_to_vector_[did][0] << "\n";
 
     // write vector
     dtv.write(reinterpret_cast<const char *>(document_to_vector_[did].data()),
@@ -254,10 +245,6 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
         terms_per_document_[did]++;
       }
 
-      if (did % 10000 == 0) {
-        std::cout << did << "\n";
-      }
-
       // for every term that occurs in this document, increase the count of documents that this term
       // occurs in
       for (auto &t : unique_terms_in_doc) {
@@ -283,35 +270,22 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
   for (DocumentID did = 0; did < document_to_contained_terms_.size(); ++did) {
     uint32_t num_tokens = terms_per_document_[did];
     std::vector<float> vec;
-    // std::cout << "did: " << did << "\n";
 
-    // std::cout << "document_to_contained_terms_[did].size(): "
-    //           << document_to_contained_terms_[did].size() << "\n";
     vec.reserve(document_to_contained_terms_[did].size());
 
     // iterate over all terms in this document
     for (const auto tid : document_to_contained_terms_[did]) {
       vec.push_back((float)score_func->score(
           {num_tokens}, {term_frequency_per_document_[tid][did], documents_per_term_[tid]}));
-      // std::cout << "did: " << did << ", tid: " << tid
-      //           << ", frequency: " << term_frequency_per_document_[tid][did]
-      //           << ", score: " << vec[vec.size() - 1] << "\n";
     }
     normalize_vector(vec);
 
     document_to_vector_.push_back(std::move(vec));
-
-    if (did % 10000 == 0) {
-      std::cout << did << "\n";
-    }
   }
 
   // insert vectors into hnsw
   for (DocumentID doc_id = 0; doc_id < document_to_contained_terms_.size(); ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
-    if (doc_id % 10000 == 0) {
-      std::cout << "inserted: " << doc_id << "\n";
-    }
   }
 
   store();
@@ -320,9 +294,6 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
 void VectorEngineTfidf::insert(DocumentID min_id_inclusive, DocumentID max_id_exclusive) {
   for (DocumentID doc_id = min_id_inclusive; doc_id < max_id_exclusive; ++doc_id) {
     hnsw_alg->addPoint(&doc_id, doc_id);
-    if (doc_id % 10000 == 0) {
-      std::cout << "inserted: " << doc_id << "\n";
-    }
   }
 }
 
@@ -407,7 +378,5 @@ uint64_t VectorEngineTfidf::footprint() {
                                                 // contained in term_id_to_term as well
   }
   // uint64_t hnsw_fp = hnsw_alg->get_footprint();
-  // std::cout << "hnsw_fp: " << hnsw_fp << "\n";
-  // std::cout << "vec_fp: " << vec_fp << "\n";
   return vec_fp;
 }
