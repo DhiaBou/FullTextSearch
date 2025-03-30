@@ -8,10 +8,9 @@
 #include <sys/types.h>
 #include <cstdint>
 #include <string>
-#include "../../fts_engine.hpp"
+#include "fts_engine.hpp"
 #include "algorithms/vector/index/hnsw/spaces/cosine_sim.hpp"
 #include "index/hnsw/hnsw_alg.hpp"
-#include "index/hnsw/spaces/l2_space.hpp"
 
 namespace hnsw = vectorlib::hnsw;
 

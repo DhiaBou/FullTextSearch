@@ -5,8 +5,8 @@
 
 #include <fstream>
 
-#include "../vector_lib.hpp"
-#include "visited_list.hpp"
+#include "algorithms/vector/index/hnsw/visited_list.hpp"
+#include "algorithms/vector/index/vector_lib.hpp"
 
 // TODO: Have same order of functions in header and source file
 namespace vectorlib {
