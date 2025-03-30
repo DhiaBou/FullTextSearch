@@ -365,7 +365,7 @@ double VectorEngineTfidf::getAvgDocumentLength() {
   throw std::runtime_error("Method is not yet implemented.");
 }
 
-uint64_t VectorEngineTfidf::footprint() {
+uint64_t VectorEngineTfidf::footprint_size() {
   uint64_t vec_fp = documents_per_term_.size() * sizeof(uint32_t);
   for (auto &v : document_to_vector_) {
     vec_fp += (v.size() * sizeof(float));
@@ -380,3 +380,5 @@ uint64_t VectorEngineTfidf::footprint() {
   // uint64_t hnsw_fp = hnsw_alg->get_footprint();
   return vec_fp;
 }
+
+uint64_t VectorEngineTfidf::footprint_capacity() { return 0; }

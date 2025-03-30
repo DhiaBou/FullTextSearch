@@ -38,7 +38,8 @@ class VectorEngineTfidf : public FullTextSearchEngine {
 
   double getAvgDocumentLength() override;
   void insert(DocumentID min_id, DocumentID max_id);
-  uint64_t footprint() override;
+  uint64_t footprint_size() override;
+  uint64_t footprint_capacity() override;
 
  private:
   int dim = 1;                  // Dimension of the elements

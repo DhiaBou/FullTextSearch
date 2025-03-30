@@ -254,4 +254,6 @@ double VectorEngine::getAvgDocumentLength() {
   return static_cast<double>(total_docs_length) / static_cast<double>(doc_count);
 }
 //---------------------------------------------------------------------------
-uint64_t VectorEngine::footprint() { return 0; }
+uint64_t VectorEngine::footprint_size() { return 0; }
+//---------------------------------------------------------------------------
+uint64_t VectorEngine::footprint_capacity() { return 0; }
