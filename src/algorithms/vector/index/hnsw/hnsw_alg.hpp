@@ -1,5 +1,5 @@
 //
-// Created by miguel on 28.11.24.
+// This is a part of https://github.com/nmslib/hnswlib/blob/master/hnswlib/hnswalg.h
 //
 
 #ifndef FTS_HNSWALG_H

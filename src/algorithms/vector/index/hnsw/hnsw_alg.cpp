@@ -1,4 +1,8 @@
-
+//
+// This is a part of
+// https://github.com/nmslib/hnswlib/blob/master/hnswlib/hnswalg.h,
+// optimized with prefetching.
+//
 #include "hnsw_alg.hpp"
 
 #include <assert.h>

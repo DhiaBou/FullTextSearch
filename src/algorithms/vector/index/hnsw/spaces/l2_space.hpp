@@ -1,5 +1,6 @@
 //
-// Created by miguel on 05.12.24.
+// This is a part of
+// https://github.com/nmslib/hnswlib/blob/master/hnswlib/space_l2.h
 //
 
 #ifndef FTS_L2SPACE_H
