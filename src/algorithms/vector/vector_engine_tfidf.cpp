@@ -222,7 +222,7 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
   std::vector<Document> docs = doc_it.next();
   while (!docs.empty()) {
     for (const auto &doc : docs) {
-      DocumentID did = doc.getId() - 1;
+      DocumentID did = doc.getId();
       tokenizer::StemmingTokenizer tokenizer(doc.getData(), doc.getSize());
       std::unordered_set<TermID> unique_terms_in_doc;
 
@@ -352,7 +352,7 @@ std::vector<std::pair<DocumentID, double>> VectorEngineTfidf::search(
   while (!pq.empty()) {
     auto [dist, id] = pq.top();
 
-    res[--i] = {id + 1, dist};
+    res[--i] = {id, dist};
     pq.pop();
   }
 
