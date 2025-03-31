@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   auto options = bootstrap::parseCommandLine(argc, argv);
 
   // Decide for a FTS-Index-Engine
-  auto algorithm_choice = std::move(options.algorithm);
+  auto& algorithm_choice = options.algorithm;
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
     engine = std::make_unique<VectorSpaceModelEngine>();
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
   // Define the scoring function used to score documents
   std::unique_ptr<scoring::ScoringFunction> score_func;
-  auto scoring_choice = std::move(options.scoring);
+  auto& scoring_choice = options.scoring;
   if (scoring_choice == "bm25") {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
