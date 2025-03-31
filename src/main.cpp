@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   auto options = bootstrap::parseCommandLine(argc, argv);
 
   // Decide for a FTS-Index-Engine
-  auto algorithm_choice = std::move(options.algorithm);
+  auto& algorithm_choice = options.algorithm;
   std::unique_ptr<FullTextSearchEngine> engine;
   if (algorithm_choice == "vsm") {
     engine = std::make_unique<VectorSpaceModelEngine>();
@@ -32,7 +32,20 @@ int main(int argc, char** argv) {
   }
 
   // Build the FTS-Index
-  engine->indexDocuments(options.data_path);
+  std::cout << "Build: ";
+  {
+    auto start = std::chrono::high_resolution_clock::now();
+    engine->indexDocuments(options.data_path);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << std::endl;
+  }
+
+  // Determine the memory footprint
+  const auto& allocated_footprint = engine->footprint_capacity();
+  std::cout << "Allocated memory footprint: " << allocated_footprint << std::endl;
+  const auto& real_footprint = engine->footprint_size();
+  std::cout << "Real memory footprint: " << real_footprint << std::endl;
 
   if (options.benchmarking_mode) {
     return 0;
@@ -40,7 +53,7 @@ int main(int argc, char** argv) {
 
   // Define the scoring function used to score documents
   std::unique_ptr<scoring::ScoringFunction> score_func;
-  auto scoring_choice = std::move(options.scoring);
+  auto& scoring_choice = options.scoring;
   if (scoring_choice == "bm25") {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
@@ -60,17 +73,41 @@ int main(int argc, char** argv) {
     query_engine = std::make_unique<queries::CommandLineIterator>();
   }
 
-  while (query_engine->hasNext()) {
-    queries::Query query = query_engine->next();
-    auto results = engine->search(query.content, *score_func, options.num_results);
+  // Read queries
+  if (query_engine->getType() == queries::QueryIterator::Type::File) {
+    fs::path output_path = fs::path(options.queries_path) / (options.output_prefix + "_result.tbl");
+    std::ofstream file_output(output_path);
+    while (query_engine->hasNext()) {
+      queries::Query query = query_engine->next();
 
-    if (query_engine->getType() == queries::QueryIterator::Type::File) {
-      fs::path output_path = fs::path(options.queries_path) / (query.id + "_result.tbl");
-      std::ofstream file_output(output_path);
-      for (const auto& [doc_id, score] : results) {
-        file_output << doc_id << "|" << score << "|" << std::endl;
+      // Run query
+      std::vector<std::pair<DocumentID, double>> results;
+      std::cout << query.content << ": ";
+      {
+        auto start = std::chrono::high_resolution_clock::now();
+        results = engine->search(query.content, *score_func, options.num_results);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
+                  << std::endl;
       }
-    } else {
+      for (const auto& [doc_id, score] : results) {
+        file_output << query.content << "|" << doc_id << "|" << score << "|" << std::endl;
+      }
+    }
+  } else {
+    while (query_engine->hasNext()) {
+      queries::Query query = query_engine->next();
+
+      // Run query
+      std::vector<std::pair<DocumentID, double>> results;
+      std::cout << query.content << ": ";
+      {
+        auto start = std::chrono::high_resolution_clock::now();
+        results = engine->search(query.content, *score_func, options.num_results);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()
+                  << std::endl;
+      }
       for (const auto& [doc_id, score] : results) {
         std::cout << doc_id << "|" << score << "|" << std::endl;
       }
