@@ -10,8 +10,17 @@ FileIterator::FileIterator(const std::string& path) : current(0) {
       // Only .txt files contain queries
 
       utils::FileReader query_input(entry.path().c_str());
-      queries.push_back(
-          {{entry.path().stem().string()}, {query_input.begin(), query_input.getSize()}});
+      auto word_begin = query_input.begin();
+      auto word_end = query_input.begin();
+      auto end = query_input.end();
+      while (word_begin != end) {
+        while (*word_end != '\n' && word_end != end) ++word_end;
+        queries.push_back({{entry.path().stem().string()},
+                           {word_begin, static_cast<size_t>(word_end - word_begin)}});
+        if (word_end == end) break;
+        ++word_end;
+        word_begin = word_end;
+      }
     }
   }
 }
