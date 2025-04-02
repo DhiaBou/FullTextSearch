@@ -3,6 +3,7 @@ set(TEST_SOURCES
         tokenizer/stemmingtokenizer_tests.cpp
         scoring/bm25_test.cpp
         scoring/tf_idf_test.cpp
+        vector/hnsw_test.cpp
 )
 
 add_executable(fts_tests ${TEST_SOURCES})
