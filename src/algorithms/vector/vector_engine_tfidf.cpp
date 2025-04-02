@@ -210,6 +210,18 @@ void VectorEngineTfidf::indexDocuments(std::string &data_path) {
   DocumentIterator doc_it(data_path);
   if (load()) {
     std::cout << "HNSW index loaded from save file.\n";
+    std::cout << "numbers of different words/token: " << term_id_to_term.size() << std::endl;
+    std::cout << "numbers of documents: " << document_to_vector_.size() << std::endl;
+
+    uint64_t vec_fp = 0;
+    for (auto &v : document_to_vector_) {
+      vec_fp += (v.size() * sizeof(float));
+    }
+
+    std::cout << "average vector size: " << vec_fp / document_to_vector_.size() << std::endl;
+
+    std::cout << "footprint size: " << footprint_size() << std::endl;
+    std::cout << "footprint capacity: " << footprint_capacity() << std::endl;
     return;
   }
   // key is term id, value is a map of doc id to term frequency
@@ -381,4 +393,17 @@ uint64_t VectorEngineTfidf::footprint_size() {
   return vec_fp;
 }
 
-uint64_t VectorEngineTfidf::footprint_capacity() { return 0; }
+uint64_t VectorEngineTfidf::footprint_capacity() {
+  uint64_t vec_fp = documents_per_term_.size() * sizeof(uint32_t);
+  for (auto &v : document_to_vector_) {
+    vec_fp += (v.capacity() * sizeof(float));
+  }
+  for (auto &v : document_to_contained_terms_) {
+    vec_fp += (v.capacity() * sizeof(TermID));
+  }
+  for (auto &[s, t] : term_to_term_id) {
+    vec_fp += 2 * s.capacity() + sizeof(uint32_t);  // count size of the string twice, because it is
+                                                    // contained in term_id_to_term as well
+  }
+  return vec_fp;
+}
