@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -23,11 +24,10 @@ namespace hnsw = vectorlib::hnsw;
 //---------------------------------------------------------------------------
 VectorEngine::VectorEngine() : space(dim) {
   hnsw_alg = new hnsw::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
-  // std::cout << "Vector Engine Initialized" << std::endl;
 }
 //---------------------------------------------------------------------------
 VectorEngine::~VectorEngine() {
-  hnsw_alg->saveIndex("hnswIndex.bin");
+  hnsw_alg->saveIndex(hnsw_path);
   delete hnsw_alg;
 }
 //---------------------------------------------------------------------------
@@ -178,6 +178,12 @@ static bool getEmbeddings(const char* text, size_t text_length,
 }
 //---------------------------------------------------------------------------
 void VectorEngine::indexDocuments(std::string& data_path) {
+  std::ifstream file(hnsw_path);
+  if (file) {
+    hnsw_alg->loadIndex(hnsw_path, &space);
+    return;
+  }
+
   auto start_time = std::chrono::high_resolution_clock::now();  // Start timing
 
   DocumentIterator doc_it(data_path);
