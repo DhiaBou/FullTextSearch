@@ -2,17 +2,20 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
-//---------------------------------------------------------------------------
+
 #include "algorithms/inverted/inverted_index_engine.hpp"
 #include "algorithms/trigram/trigram_index_engine.hpp"
-#include "algorithms/vsm/vector_space_model_engine.hpp"
+#include "algorithms/vector/vector_engine.hpp"
+#include "algorithms/vector/vector_engine_tfidf.hpp"
 #include "bootstrap/cli.hpp"
+#include "documents/document_iterator.hpp"
 #include "fts_engine.hpp"
 #include "queries/query_iterator.hpp"
 #include "scoring/bm25.hpp"
 #include "scoring/scoring_function.hpp"
 #include "scoring/tf_idf.hpp"
+#include "scoring/tf_idf_gensim.hpp"
+
 //---------------------------------------------------------------------------
 int main(int argc, char** argv) {
   // Parse input arguments
@@ -21,8 +24,10 @@ int main(int argc, char** argv) {
   // Decide for a FTS-Index-Engine
   auto& algorithm_choice = options.algorithm;
   std::unique_ptr<FullTextSearchEngine> engine;
-  if (algorithm_choice == "vsm") {
-    engine = std::make_unique<VectorSpaceModelEngine>();
+  if (algorithm_choice == "vector-emb") {
+    engine = std::make_unique<VectorEngine>();
+  } else if (algorithm_choice == "vector-tfidf") {
+    engine = std::make_unique<VectorEngineTfidf>();
   } else if (algorithm_choice == "inverted") {
     engine = std::make_unique<InvertedIndexEngine>();
   } else if (algorithm_choice == "trigram") {
@@ -45,7 +50,11 @@ int main(int argc, char** argv) {
     score_func =
         std::make_unique<scoring::BM25>(engine->getDocumentCount(), engine->getAvgDocumentLength());
   } else if (scoring_choice == "tf-idf") {
-    score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
+    if (algorithm_choice == "vector-tfidf") {
+      score_func = std::make_unique<scoring::TfIdfGensim>(engine->getDocumentCount());
+    } else {
+      score_func = std::make_unique<scoring::TfIdf>(engine->getDocumentCount());
+    }
   } else {
     throw std::invalid_argument("Invalid scoring choice!");
   }
